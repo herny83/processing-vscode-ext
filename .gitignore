@@ -65,3 +65,4 @@ server/out/
 # Ignore debug adapter build outputs
 debug/dist/
 debug/out/
+*.vsix

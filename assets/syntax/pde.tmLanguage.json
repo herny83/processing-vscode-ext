@@ -1,0 +1,14 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "processing",
+	"scopeName": "source.pde",
+	"patterns": [
+		{ "begin": "\\b(package)\\b\\s*", "beginCaptures": { "1": { "name": "keyword.other.package.java" } }, "end": "\\s*(;)", "endCaptures": { "1": { "name": "punctuation.terminator.java" } }, "name": "meta.package.java", "contentName": "storage.modifier.package.java", "patterns": [ { "include": "#comments" }, { "match": "(?<=\\.)\\s*\\.|\\.(?=\\s*;)", "name": "invalid.illegal.character_not_allowed_here.java" }, { "match": "(?<!_)_(?=\\s*(\\.|;))|\\b\\d+|-+", "name": "invalid.illegal.character_not_allowed_here.java" }, { "match": "[A-Z]+", "name": "invalid.deprecated.package_name_not_lowercase.java" }, { "match": "(?x)\\b(?<!\\$)\n(abstract|assert|boolean|break|byte|case|catch|char|class|\nconst|continue|default|do|double|else|enum|extends|final|\nfinally|float|for|goto|if|implements|import|instanceof|int|\ninterface|long|native|new|package|private|protected|public|\nreturn|short|static|strictfp|super|switch|syncronized|this|\nthrow|throws|transient|try|void|volatile|while|\ntrue|false|null|setup|draw)\\b", "name": "invalid.illegal.character_not_allowed_here.java" }, { "match": "\\.", "name": "punctuation.separator.java" } ] },
+		{ "begin": "\\b(import)\\b\\s*\\b(static)?\\b\\s", "beginCaptures": { "1": { "name": "keyword.other.import.java" }, "2": { "name": "storage.modifier.java" } }, "end": "\\s*(;)", "endCaptures": { "1": { "name": "punctuation.terminator.java" } }, "name": "meta.import.java", "contentName": "storage.modifier.import.java", "patterns": [ { "include": "#comments" }, { "match": "(?<=\\.)\\s*\\.|\\.(?=\\s*;)", "name": "invalid.illegal.character_not_allowed_here.java" }, { "match": "(?<!\\.)\\s*\\*", "name": "invalid.illegal.character_not_allowed_here.java" }, { "match": "(?<!_)_(?=\\s*(\\.|;))|\\b\\d+|-+", "name": "invalid.illegal.character_not_allowed_here.java" }, { "match": "(?x)\\b(?<!\\$)\n(abstract|assert|boolean|break|byte|case|catch|char|class|\nconst|continue|default|do|double|else|enum|extends|final|\nfinally|float|for|goto|if|implements|import|instanceof|int|\ninterface|long|native|new|package|private|protected|public|\nreturn|short|static|strictfp|super|switch|syncronized|this|\nthrow|throws|transient|try|void|volatile|while|\ntrue|false|null)\\b", "name": "invalid.illegal.character_not_allowed_here.java" }, { "match": "\\.", "name": "punctuation.separator.java" }, { "match": "\\*", "name": "variable.language.wildcard.java" } ] },
+		{ "include": "#comments-javadoc" },
+		{ "include": "#code" },
+		{ "include": "#module" }
+	],
+	"repository": {},
+	"scopeName": "source.processing"
+}

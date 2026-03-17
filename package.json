@@ -7,14 +7,22 @@
   "engines": {
     "vscode": ">=1.80.0"
   },
-  "categories": ["Programming Languages", "Debuggers"],
+  "categories": [
+    "Programming Languages",
+    "Debuggers"
+  ],
   "main": "./client/out/extension.js",
   "contributes": {
     "languages": [
       {
         "id": "processing",
-        "aliases": ["Processing", "processing"],
-        "extensions": [".pde"],
+        "aliases": [
+          "Processing",
+          "processing"
+        ],
+        "extensions": [
+          ".pde"
+        ],
         "configuration": "./assets/language-configuration.json"
       }
     ],
@@ -32,7 +40,9 @@
         "program": "./debugger/out/adapter.js",
         "configurationAttributes": {
           "launch": {
-            "required": ["program"],
+            "required": [
+              "program"
+            ],
             "properties": {
               "program": {
                 "type": "string",
@@ -41,7 +51,9 @@
             }
           }
         },
-        "languages": ["processing"]
+        "languages": [
+          "processing"
+        ]
       }
     ],
     "configuration": {
@@ -65,7 +77,11 @@
         },
         "processing.trace.server": {
           "type": "string",
-          "enum": ["off", "messages", "verbose"],
+          "enum": [
+            "off",
+            "messages",
+            "verbose"
+          ],
           "default": "off",
           "description": "Trace level for the language server."
         }
@@ -110,5 +126,18 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/herny83/processing-vscode-ext.git"
+  },
+  "dependencies": {
+    "@xmcl/asm": "^1.0.1",
+    "adm-zip": "^0.5.16",
+    "antlr4-c3": "^3.4.4",
+    "antlr4ts": "^0.5.0-alpha.4",
+    "bytebuffer": "^5.0.1",
+    "java-class-tools": "^1.3.2"
+  },
+  "vsce": {
+    "exclude": [
+      "node_modules/**"
+    ]
   }
 }
