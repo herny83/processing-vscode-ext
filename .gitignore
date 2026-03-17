@@ -1,0 +1,67 @@
+# Node.js dependencies
+node_modules/
+
+# Build outputs
+**/dist/
+**/out/
+**/build/
+
+# TypeScript cache
+**/*.tsbuildinfo
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Test coverage
+coverage/
+
+# Environment files
+.env
+.env.*
+
+# VS Code settings
+.vscode/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Miscellaneous
+*.swp
+*.swo
+
+# Ignore debug output
+**/debug/
+
+# Ignore test output
+**/test-output/
+
+# Ignore package-lock and yarn lock if not used for lockfile management
+# package-lock.json
+yarn.lock
+
+# Ignore generated grammar files (if any)
+**/*.interp
+**/*.tokens
+
+# Ignore temporary files
+*.tmp
+*.temp
+
+# Ignore shared build outputs
+shared/dist/
+shared/out/
+
+# Ignore client/server specific build outputs
+client/dist/
+client/out/
+server/dist/
+server/out/
+
+# Ignore debug adapter build outputs
+debug/dist/
+debug/out/

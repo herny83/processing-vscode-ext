@@ -1,0 +1,16 @@
+{
+  "name": "processing-ext-shared",
+  "version": "0.0.1",
+  "main": "out/index.js",
+  "types": "out/index.d.ts",
+  "scripts": {
+    "build": "tsc -p .",
+    "watch": "tsc -p . --watch",
+    "test": "echo \"No shared tests yet\""
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.80.0"
+  }
+}

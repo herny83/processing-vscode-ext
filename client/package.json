@@ -1,0 +1,19 @@
+{
+  "name": "processing-ext-client",
+  "version": "0.0.1",
+  "main": "out/extension.js",
+  "types": "out/extension.d.ts",
+  "scripts": {
+    "build": "tsc -p .",
+    "watch": "tsc -p . --watch",
+    "test": "echo \"No client tests yet\""
+  },
+  "dependencies": {
+    "vscode-languageclient": "^8.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.80.0",
+    "typescript": "^5.9.3"
+  }
+}

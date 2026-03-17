@@ -1,0 +1,9 @@
+{
+  "name": "processing-ext-debugger",
+  "version": "1.0.0",
+  "main": "src/adapter.ts",
+    "types": "src/adapter.ts",
+  "scripts": {
+    "build": "tsc"
+  }
+}

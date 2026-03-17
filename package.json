@@ -1,0 +1,114 @@
+{
+  "name": "processing-ext",
+  "displayName": "Processing Language & Debugger",
+  "description": "Unified VS Code extension for Processing language support and debugging.",
+  "version": "0.0.1",
+  "publisher": "herny83",
+  "engines": {
+    "vscode": ">=1.80.0"
+  },
+  "categories": ["Programming Languages", "Debuggers"],
+  "main": "./client/out/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "processing",
+        "aliases": ["Processing", "processing"],
+        "extensions": [".pde"],
+        "configuration": "./assets/language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "processing",
+        "scopeName": "source.processing",
+        "path": "./assets/syntax/pde.tmLanguage.json"
+      }
+    ],
+    "debuggers": [
+      {
+        "type": "processing",
+        "label": "Processing Debugger",
+        "program": "./debugger/out/adapter.js",
+        "configurationAttributes": {
+          "launch": {
+            "required": ["program"],
+            "properties": {
+              "program": {
+                "type": "string",
+                "description": "Path to the Processing sketch file to debug."
+              }
+            }
+          }
+        },
+        "languages": ["processing"]
+      }
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "Processing",
+      "properties": {
+        "processing.path": {
+          "type": "string",
+          "default": "",
+          "description": "Path to the Processing installation."
+        },
+        "processing.launcher": {
+          "type": "string",
+          "default": "",
+          "description": "Custom launcher for Processing sketches."
+        },
+        "processing.maxProblems": {
+          "type": "number",
+          "default": 100,
+          "description": "Maximum number of problems reported."
+        },
+        "processing.trace.server": {
+          "type": "string",
+          "enum": ["off", "messages", "verbose"],
+          "default": "off",
+          "description": "Trace level for the language server."
+        }
+      }
+    },
+    "snippets": [
+      {
+        "language": "processing",
+        "path": "./assets/snippets.json"
+      }
+    ],
+    "iconThemes": [
+      {
+        "id": "processing-icons",
+        "label": "Processing Icon Theme",
+        "path": "./assets/fileicons/processing-icon-theme.json"
+      }
+    ]
+  },
+  "activationEvents": [
+    "onLanguage:processing",
+    "onCommand:processing.runSketch",
+    "onCommand:processing.debugSketch",
+    "onDebug"
+  ],
+  "scripts": {
+    "build": "npm run build -w client && npm run build -w server && npm run build -w debug && npm run build -w shared",
+    "test": "npm run test -w client && npm run test -w server && npm run test -w debug && npm run test -w shared"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.80.0",
+    "vscode-languageclient": "^8.0.0",
+    "vscode-languageserver": "^8.0.0"
+  },
+  "workspaces": [
+    "client",
+    "server",
+    "debugger",
+    "shared"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/herny83/processing-vscode-ext.git"
+  }
+}
