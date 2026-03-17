@@ -1,5 +1,5 @@
 {
-  "name": "processing-ext",
+  "name": "processing",
   "displayName": "Processing Language & Debugger",
   "description": "Unified VS Code extension for Processing language support and debugging.",
   "version": "0.0.1",
