@@ -13,6 +13,7 @@ import { ProcessingJavaDebugConfigProvider } from "./JavaConfigurationProvider";
 import { ProcessingDebugConfigurationProvider } from "./ProcessingConfigurationProvider";
 import { ProcessingInlineValuesProvider } from "./ProcessingInlineValueProvider";
 import { ProcessingDebugAdapterDescriptorFactory } from "./ProcessingDebugAdapterDescriptorFactory";
+import { initializeHotCodeReplace } from "./hotCodeReplace";
 
 export async function activate(context: vscode.ExtensionContext): Promise<any> {
 	out.activate();
@@ -36,6 +37,9 @@ function initializeExtension(context: vscode.ExtensionContext): any
 	// Register Processing commands
 	context.subscriptions.push(vscode.commands.registerCommand("processing.debug.runPdeFile", runPdeFile));
 	context.subscriptions.push(vscode.commands.registerCommand("processing.debug.debugPdeFile", debugPdeFile));
+
+	// Initialize hot code replace support
+	initializeHotCodeReplace(context);
 
 	// Register Processing inline values provider
 	context.subscriptions.push(vscode.languages.registerInlineValuesProvider({ language: "processing", scheme: "file" }, new ProcessingInlineValuesProvider()));

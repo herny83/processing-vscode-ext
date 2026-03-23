@@ -245,7 +245,8 @@ export class ProcessingDebugConfigurationProvider implements vscode.DebugConfigu
 					config.vmArgs = "";
 				}
 				if (config.vmArgs.search("-Djava.library.path") < 0) {
-					config.vmArgs += " -Djava.library.path=" + sketch.getProcessingJavaLibraries();
+					const libPath = sketch.getProcessingJavaLibraries();
+					config.vmArgs += ` "-Djava.library.path=${libPath}"`;
 				}
 				// If the user doesn't specify 'console' in launch.json, use the global setting to get the launch console.
 				if (!config.console) {
@@ -263,9 +264,8 @@ export class ProcessingDebugConfigurationProvider implements vscode.DebugConfigu
 				config.env.JAVA_HOME = sketch.getProcessingJavaHome();
 
 				if (_.isEmpty(config.classPaths) && _.isEmpty(config.modulePaths)) {
-					config.modulePaths = [];// result[0];
-					config.classPaths = []; //result[1];
-					config.modulePaths.push(sketch.getProcessingJavaModules());
+					config.modulePaths = [];
+					config.classPaths = [];
 					sketch.fillWithAllClassPaths(config.classPaths);
 				} else {
 					config.modulePaths = await this.resolvePath(folder, config.modulePaths, config.mainClass, config.projectName, true /*isModulePath*/);
@@ -378,31 +378,32 @@ export class ProcessingDebugConfigurationProvider implements vscode.DebugConfigu
 
 			vscode.commands.executeCommand("workbench.panel.repl.view.focus");
 
-			delete config.__progressId;
-			return config;
-		} catch (ex) {
-			if (ex instanceof utility.JavaExtensionNotEnabledError) {
-				utility.guideToInstallJavaExtension();
-				return undefined;
-			}
-			if (ex instanceof utility.UserError) {
-				utility.showErrorMessageWithTroubleshooting(ex.context);
-				return undefined;
-			}
-
-			utility.showErrorMessageWithTroubleshooting(utility.convertErrorToMessage(ex));
-			return undefined;
-		} finally {
 			if (configCopy && config.mainClass) {
-				configCopy.name = config.name;
-				configCopy.mainClass = config.mainClass;
-				configCopy.projectName = config.projectName;
-				configCopy.__workspaceFolder = folder;
+				configCopy!.name = config.name;
+				configCopy!.mainClass = config.mainClass;
+				configCopy!.projectName = config.projectName;
+				configCopy!.__workspaceFolder = folder;
 				lastUsedLaunchConfig = configCopy;
 			}
 
 			progressReporter.done();
 			vscode.window.showInformationMessage(`Processing Build Succeeded`);
+
+			delete config.__progressId;
+			return config;
+		} catch (ex) {
+			progressReporter.done();
+
+			if (ex instanceof utility.JavaExtensionNotEnabledError) {
+				utility.guideToInstallJavaExtension();
+			} else if (ex instanceof utility.UserError) {
+				utility.showErrorMessageWithTroubleshooting(ex.context);
+			} else {
+				const errorMsg = utility.convertErrorToMessage(ex);
+				vscode.window.showErrorMessage(`Processing Debug Failed: ${errorMsg.message}`);
+			}
+
+			return undefined;
 		}
 	}
 

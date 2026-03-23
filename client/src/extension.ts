@@ -76,7 +76,7 @@ function compareVersions(a: string, b: string): number
 	return 0;
 }
 
-export function activate(context: vscode.ExtensionContext) 
+export function activate(context: vscode.ExtensionContext)
 {
 	console.log("Processing Client activation");
 	let serverModule = context.asAbsolutePath( path.join('server', 'out', 'server.js') );

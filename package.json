@@ -11,8 +11,11 @@
     "Programming Languages",
     "Debuggers"
   ],
-  "main": "./client/out/extension.js",
+  "main": "./out/extension.js",
   "contributes": {
+    "javaExtensions": [
+      "./debugger/server/com.microsoft.java.debug.plugin-0.53.2.jar"
+    ],
     "languages": [
       {
         "id": "processing",
@@ -56,6 +59,99 @@
         ]
       }
     ],
+    "commands": [
+      {
+        "command": "processing.debug.runPdeFile",
+        "title": "Run Processing Sketch",
+        "category": "Processing"
+      },
+      {
+        "command": "processing.debug.debugPdeFile",
+        "title": "Debug Processing Sketch",
+        "category": "Processing"
+      },
+      {
+        "command": "processing.debug.runCodeLens",
+        "title": "Run (CodeLens)",
+        "category": "Processing"
+      },
+      {
+        "command": "processing.debug.debugCodeLens",
+        "title": "Debug (CodeLens)",
+        "category": "Processing"
+      },
+      {
+        "command": "processing.debug.runHover",
+        "title": "Run (Hover)",
+        "category": "Processing"
+      },
+      {
+        "command": "processing.reloadSketch",
+        "title": "Reload Sketch",
+        "category": "Processing"
+      },
+      {
+        "command": "processing.exportSketch",
+        "title": "Export Sketch",
+        "category": "Processing"
+      },
+      {
+        "command": "java.debug.continueAll",
+        "title": "Continue All Threads",
+        "category": "Processing Debug"
+      },
+      {
+        "command": "java.debug.continueOthers",
+        "title": "Continue Other Threads",
+        "category": "Processing Debug"
+      },
+      {
+        "command": "java.debug.pauseAll",
+        "title": "Pause All Threads",
+        "category": "Processing Debug"
+      },
+      {
+        "command": "java.debug.pauseOthers",
+        "title": "Pause Other Threads",
+        "category": "Processing Debug"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "processing.debug.runPdeFile",
+          "when": "resourceExtname == .pde",
+          "group": "processing@1"
+        },
+        {
+          "command": "processing.debug.debugPdeFile",
+          "when": "resourceExtname == .pde",
+          "group": "processing@2"
+        },
+        {
+          "command": "processing.exportSketch",
+          "when": "resourceExtname == .pde",
+          "group": "processing@3"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "processing.debug.runPdeFile",
+          "when": "resourceExtname == .pde",
+          "group": "processing@1"
+        },
+        {
+          "command": "processing.debug.debugPdeFile",
+          "when": "resourceExtname == .pde",
+          "group": "processing@2"
+        },
+        {
+          "command": "processing.exportSketch",
+          "when": "resourceExtname == .pde",
+          "group": "processing@3"
+        }
+      ]
+    },
     "configuration": {
       "type": "object",
       "title": "Processing",
@@ -78,6 +174,44 @@
           ],
           "default": "manual",
           "description": "Hot code replacement mode during debugging."
+        },
+        "processing.outputPath": {
+          "type": "string",
+          "default": "./out/",
+          "description": "Output path for exported Processing sketches (relative to sketch folder)."
+        },
+        "processing.debug.settings.enableRunDebugCodeLens": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable Run/Debug CodeLens above setup() and draw() functions."
+        },
+        "processing.debug.vmArgs": {
+          "type": "string",
+          "default": "",
+          "description": "Default VM arguments for Processing debug sessions."
+        },
+        "processing.debug.console": {
+          "type": "string",
+          "enum": [
+            "integratedTerminal",
+            "internalConsole",
+            "externalTerminal"
+          ],
+          "default": "integratedTerminal",
+          "description": "Console to use for Processing debug output."
+        },
+        "processing.debug.enableLibrarySourceLookup": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically add workspace source roots to debug source lookup paths."
+        },
+        "processing.debug.additionalSourcePaths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Additional source paths for stepping into library code during debugging."
         },
         "processing.silentNotification": {
           "type": "boolean",
@@ -105,9 +239,9 @@
     "onDebug"
   ],
   "scripts": {
-    "build": "npm run build -w client && npm run build -w server && npm run build -w debugger && npm run build -w shared",
+    "build": "npm run build -w client && npm run build -w server && npm run build -w debugger && npm run build -w shared && tsc -p .",
     "test": "npm run test -w client && npm run test -w server && npm run test -w debugger && npm run test -w shared",
-    "compile": "npm run build -w client && npm run build -w server && npm run build -w debugger && npm run build -w shared"
+    "compile": "npm run build -w client && npm run build -w server && npm run build -w debugger && npm run build -w shared && tsc -p ."
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

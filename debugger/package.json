@@ -51,9 +51,6 @@
         ]
       }
     ],
-    "javaExtensions": [
-      "./server/com.microsoft.java.debug.plugin-0.50.0.jar"
-    ],
     "breakpoints": [
       {
         "language": "processing"

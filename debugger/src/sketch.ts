@@ -2,6 +2,7 @@ import * as utility from './utility';
 import * as vscode from 'vscode'
 import * as path from "path";
 import * as fs from 'fs';
+import * as cp from 'child_process';
 import { IProgressReporter } from "./progressAPI";
 
 export interface BuildParams {
@@ -261,35 +262,49 @@ function getNativePlatformFolder() : string
 }
 
 /**
- * Finds the Processing CLI executable for building sketches.
- * 4.5+ renamed processing-java to processing.
+ * Returns the Processing CLI executable and whether it uses the new
+ * 4.5+ subcommand-based CLI (requires `cli` prefix for build flags).
  */
-function getProcessingCliExecutable() : string
+function getProcessingCli() : { executable: string; usesCliSubcommand: boolean }
 {
 	const processingPath = getProcessingPath();
 	const ext = process.platform === "win32" ? ".exe" : "";
 
-	// Try new name first (4.5+), then old name
-	const candidates = [
-		path.join(processingPath, "processing" + ext),
+	// Old-style CLI (pre-4.5): processing-java --build --sketch=...
+	const oldCandidates = [
 		path.join(processingPath, "processing-java" + ext),
+	];
+	// New-style CLI (4.5+): processing cli --build --sketch=...
+	const newCandidates = [
+		path.join(processingPath, "processing" + ext),
 	];
 
 	if (process.platform === "darwin")
 	{
-		candidates.unshift(
-			path.join(processingPath, "Processing.app", "Contents", "MacOS", "processing" + ext),
+		oldCandidates.unshift(
 			path.join(processingPath, "Processing.app", "Contents", "MacOS", "processing-java" + ext),
+		);
+		newCandidates.unshift(
+			path.join(processingPath, "Processing.app", "Contents", "MacOS", "processing" + ext),
 		);
 	}
 
-	for (const candidate of candidates)
+	// Check old CLI first — if processing-java exists, no subcommand needed
+	for (const candidate of oldCandidates)
 	{
 		if (utility.isPathValid(candidate))
-			return candidate;
+			return { executable: candidate, usesCliSubcommand: false };
 	}
-	// Fallback: return new name and let it fail with a clear error
-	return candidates[0];
+
+	// New CLI: processing executable with `cli` subcommand
+	for (const candidate of newCandidates)
+	{
+		if (utility.isPathValid(candidate))
+			return { executable: candidate, usesCliSubcommand: true };
+	}
+
+	// Fallback
+	return { executable: newCandidates[0], usesCliSubcommand: true };
 }
 
 function ensureTrailingSlash(p: string) : string
@@ -444,32 +459,20 @@ export async function buildProcessing(_params: BuildParams | undefined, progress
 		return false;
 	}
 
-	const commandStr = getProcessingCliExecutable();
+	const cli = getProcessingCli();
 	console.info("sketchPath: " + sketchPath);
-	console.info("Processing CLI: " + commandStr);
-	const argsStr = [
+	console.info("Processing CLI: " + cli.executable + (cli.usesCliSubcommand ? " cli" : ""));
+
+	// 4.5+: `processing cli --build ...`
+	// Pre-4.5: `processing-java --build ...`
+	const args: string[] = [];
+	if (cli.usesCliSubcommand)
+		args.push("cli");
+	args.push(
 		"--force",
-		"--sketch="+sketchPath,
-		"--output="+sketchPath+path.sep+"build",
+		"--sketch=" + sketchPath,
+		"--output=" + sketchPath + path.sep + "build",
 		"--build"
-	];
-
-	// Define task options
-	const taskDefinition = {
-		type: "shell",
-		label: "buildSketch",
-		// command: commandStr,
-		// args: argsStr
-	};
-
-	// Create a task
-	const task = new vscode.Task(
-		taskDefinition,
-		vscode.TaskScope.Workspace,
-		taskDefinition.label,
-		"vscode-processing-debug",
-		new vscode.ShellExecution(commandStr, argsStr),
-		[]
 	);
 
 	let buildResult: boolean = false;
@@ -491,37 +494,44 @@ export async function buildProcessing(_params: BuildParams | undefined, progress
 	{
 		progressReporter.report("Processing To java... (cached)");
 		console.log('Sketch already compiled, using cached result.');
-		buildResult = true; // Use cached result
-		// No need to execute the task again
+		buildResult = true;
 	}
 	else
 	{
 		progressReporter.report("Processing To java...");
-		const execution : vscode.TaskExecution = await vscode.tasks.executeTask(task);
-		buildResult = await waitForTaskCompletion(execution);
+		const result = await runProcessingBuild(cli.executable, args);
+		buildResult = result.success;
+		if (!buildResult && result.error)
+		{
+			const outputChannel = vscode.window.createOutputChannel("Processing Build");
+			outputChannel.appendLine(result.error);
+			outputChannel.show(true);
+		}
 	}
 
 	if(buildResult && compiledHash !== sketchHash)
 	{
-		compiledHash = sketchHash; // Update the compiled hash after a successful build
+		compiledHash = sketchHash;
 		console.log('Sketch compiled successfully, updated compiled hash:', compiledHash);
 	}
 	return buildResult;
 }
 
-// Wait for task completion using a Promise
-async function waitForTaskCompletion(execution: vscode.TaskExecution): Promise<boolean> {
+/** Runs the Processing CLI build and captures stdout/stderr. */
+function runProcessingBuild(executable: string, args: string[]): Promise<{ success: boolean; error?: string }>
+{
 	return new Promise((resolve) => {
-		const disposable = vscode.tasks.onDidEndTaskProcess((event) => {
-			if (event.execution === execution) {
-				if (event.exitCode === 0) {
-					console.log('Processing Build successful');
-					resolve(true);
-				} else {
-					console.error('Processing Build failed with exit code:', event.exitCode);
-					resolve(false);
-				}
-				disposable.dispose();
+		cp.execFile(executable, args, { timeout: 120000 }, (error, stdout, stderr) => {
+			const output = (stderr || "") + (stdout || "");
+			if (error)
+			{
+				console.error("Processing Build failed:", output);
+				resolve({ success: false, error: output.trim() || error.message });
+			}
+			else
+			{
+				console.log("Processing Build output:", output);
+				resolve({ success: true });
 			}
 		});
 	});
