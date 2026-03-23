@@ -1,28 +1,3 @@
-class ProgressProvider implements IProgressProvider {
-    private store: { [key: string]: IProgressReporter } = {};
-
-    public createProgressReporter(jobName: string, progressLocation?: ProgressLocation | { viewId: string },
-                                  cancellable?: boolean): IProgressReporter {
-        const progressReporter = new ProgressReporter(jobName, progressLocation || ProgressLocation.Notification,
-                                cancellable === undefined ? true : !!cancellable);
-        this.store[progressReporter.getId()] = progressReporter;
-        return progressReporter;
-    }
-
-    public getProgressReporter(progressId: string): IProgressReporter | undefined {
-        return this.store[progressId];
-    }
-
-    public remove(progressReporter: IProgressReporter) {
-        delete this.store[progressReporter.getId()];
-    }
-}
-export const progressProvider: IProgressProvider = new ProgressProvider();
-// ...existing code...
-// ...existing code...
-// ...existing code...
-// Export progressProvider at the end of the file
-// Removed duplicate export. Only export at the end of the file.
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
@@ -106,7 +81,8 @@ class ProgressReporter implements IProgressReporter {
             this._statusBarItem.show();
             return;
         }
-        // Native progress fallback stub
+
+        this.showNativeProgress();
     }
 
     public hide(onlyNotifications?: boolean): void {
@@ -120,6 +96,14 @@ class ProgressReporter implements IProgressReporter {
         return this.getCancellationToken().isCancellationRequested;
     }
 
+    public done(): void {
+        this._tokenSource.cancel();
+        this._cancelProgressEventEmitter.fire();
+        this._statusBarItem?.hide();
+        this._disposables.forEach((disposable) => disposable.dispose());
+        (<ProgressProvider> progressProvider).remove(this);
+    }
+
     public getCancellationToken(): CancellationToken {
         return this._tokenSource.token;
     }
@@ -130,7 +114,55 @@ class ProgressReporter implements IProgressReporter {
         });
     }
 
-    public done(): void {
-        this._tokenSource.cancel();
+    private showNativeProgress() {
+        if (this._isShown) {
+            return;
+        }
+
+        this._isShown = true;
+        window.withProgress<boolean>({
+            location: this._progressLocation,
+            title: this._jobName ? `[${this._jobName}](command:${STATUS_COMMAND})` : undefined,
+            cancellable: this._cancellable,
+        }, (progress, token) => {
+            progress.report({
+                message: this._message,
+                increment: this._increment,
+            });
+            this.observe(token);
+            this._progressEventEmitter.event(() => {
+                progress.report({
+                    message: this._message,
+                    increment: this._increment,
+                });
+            });
+            return new Promise((resolve) => {
+                this._cancelProgressEventEmitter.event(() => {
+                    resolve(true);
+                });
+            });
+        });
     }
 }
+
+class ProgressProvider implements IProgressProvider {
+    private store: { [key: string]: IProgressReporter } = {};
+
+    public createProgressReporter(jobName: string, progressLocation?: ProgressLocation | { viewId: string },
+                                  cancellable?: boolean): IProgressReporter {
+        const progressReporter = new ProgressReporter(jobName, progressLocation || ProgressLocation.Notification,
+                                cancellable === undefined ? true : !!cancellable);
+        this.store[progressReporter.getId()] = progressReporter;
+        return progressReporter;
+    }
+
+    public getProgressReporter(progressId: string): IProgressReporter | undefined {
+        return this.store[progressId];
+    }
+
+    public remove(progressReporter: IProgressReporter) {
+        delete this.store[progressReporter.getId()];
+    }
+}
+
+export const progressProvider: IProgressProvider = new ProgressProvider();

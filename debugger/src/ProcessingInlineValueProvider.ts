@@ -1,17 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
-// Stubs for missing vscode-languageclient modules
-const CodeConverter = { createConverter: () => ({}) };
-const ProtocolConverter = { createConverter: () => ({}) };
+import * as CodeConverter from "vscode-languageclient/lib/codeConverter";
 import * as server from "vscode-languageserver-types"
+import * as ProtocolConverter from "vscode-languageclient/lib/protocolConverter";
 import * as lsp from "./languageServerPlugin";
 import * as utility from "./utility";
 import * as sketch from "./sketch";
 import * as vscode from "vscode";
 
-// Stub converter types with asRange method
-const protoConverter = { asRange: (range: any) => range };
-const codeConverter = { asRange: (range: any) => range };
+const protoConverter: ProtocolConverter.Converter = ProtocolConverter.createConverter();
+const codeConverter: CodeConverter.Converter = CodeConverter.createConverter();
 
 export class ProcessingInlineValuesProvider implements vscode.InlineValuesProvider {
 

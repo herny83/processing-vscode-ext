@@ -1,23 +1,3 @@
-// Stub: Returns a fake Java home path. Replace with real logic as needed.
-export async function getJavaHome(): Promise<string> {
-    return "C:/Program Files/Java/jdk-17";
-}
-// Stub: Converts a file path to a vscode.Uri string.
-export function getUriFromPath(path: string): string {
-    return `file://${path}`;
-}
-
-// Stub: Resolves a relative folder from a workspace path.
-export function resolveRelativeFolderFromWorspacePath(focusedFile: string, folder: any): string {
-    // Replace with actual logic as needed.
-    return focusedFile.replace(folder.uri.fsPath, '');
-}
-
-// Stub: Resolves the Processing main class name from a file URI.
-export function resolveProcessingNameFromFileUri(uri: any): string {
-    // Replace with actual logic as needed.
-    return 'MainSketch';
-}
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
@@ -120,31 +100,317 @@ export function convertErrorToMessage(err: Error): ILoggingMessage {
     return {
         type: LogMsgType.EXCEPTION,
         message: properties.message,
-        stack: properties.stack,
-        bypassLog: false,
+        stack: properties.stackTrace,
     };
 }
 
-function formatErrorProperties(err: Error): { message: string; stack?: string } {
-    return {
-        message: err.message,
-        stack: err.stack,
+function formatErrorProperties(ex: any): any {
+    const exception = (ex && ex.data && ex.data.cause)
+        || { stackTrace: (ex && ex.stack), detailMessage: String((ex && ex.message) || ex || "Unknown exception") };
+
+    const properties = {
+        message: "",
+        stackTrace: "",
     };
+
+    if (exception && typeof exception === "object") {
+        properties.message = exception.detailMessage;
+        properties.stackTrace = (Array.isArray(exception.stackTrace) && JSON.stringify(exception.stackTrace))
+            || String(exception.stackTrace);
+    } else {
+        properties.message = String(exception);
+    }
+
+    return properties;
 }
 
-export function getJavaExtension() {
+export async function getJavaHome(): Promise<string> {
+    const extensionApi = await getJavaExtensionAPI();
+    if (extensionApi && extensionApi.javaRequirement) {
+        return extensionApi.javaRequirement.java_home;
+    }
+
+    return "";
+}
+
+export function getJavaExtensionAPI(progressReporter?: IProgressReporter): Thenable<any> {
+    const extension = vscode.extensions.getExtension(JAVA_EXTENSION_ID);
+    if (!extension) {
+        throw new JavaExtensionNotEnabledError("VS Code Java Extension is not enabled.");
+    }
+
+    return new Promise<any>(async (resolve) => {
+        progressReporter?.getCancellationToken().onCancellationRequested(() => {
+            resolve(undefined);
+        });
+
+        resolve(await extension.activate());
+    });
+}
+
+export function getJavaExtension(): vscode.Extension<any> | undefined {
     return vscode.extensions.getExtension(JAVA_EXTENSION_ID);
 }
 
-export function sha256(data: string): string {
-    return crypto.createHash('sha256').update(data).digest('hex');
+export function isJavaExtEnabled(): boolean {
+    const javaExt = vscode.extensions.getExtension(JAVA_EXTENSION_ID);
+    return !!javaExt;
 }
 
-export function isPathValid(pathStr: string): boolean {
-    try {
-        fs.accessSync(pathStr);
-        return true;
-    } catch {
+export function isJavaExtActivated(): boolean {
+    const javaExt = vscode.extensions.getExtension(JAVA_EXTENSION_ID);
+    return !!javaExt && javaExt.isActive;
+}
+
+export function isGitBash(isIntegratedTerminal: boolean): boolean {
+    const currentWindowsShellPath: string | undefined = isIntegratedTerminal ? vscode.env.shell :
+        vscode.workspace.getConfiguration("terminal")?.get("external.windowsExec");
+    if (!currentWindowsShellPath) {
         return false;
+    }
+
+    const candidates: string[] = ["Git\\bin\\bash.exe", "Git\\bin\\bash", "Git\\usr\\bin\\bash.exe", "Git\\usr\\bin\\bash"];
+    const find: string | undefined = candidates.find((candidate: string) => currentWindowsShellPath.endsWith(candidate));
+    return !!find;
+}
+
+export enum ServerMode {
+    STANDARD = "Standard",
+    LIGHTWEIGHT = "LightWeight",
+    HYBRID = "Hybrid",
+}
+
+/**
+ * Wait for Java Language Support extension being on Standard mode,
+ * and return true if the final status is on Standard mode.
+ */
+export async function waitForStandardMode(progressReporter: IProgressReporter): Promise<boolean> {
+    const importMessage = progressReporter?.getProgressLocation() === vscode.ProgressLocation.Notification ?
+        "Importing projects, [check details](command:java.show.server.task.status)" : "Importing projects...";
+    if (await isImportingProjects()) {
+        progressReporter.report(importMessage);
+    }
+
+    const api = await getJavaExtensionAPI(progressReporter);
+    if (!api) {
+        return false;
+    }
+
+    if (api && api.serverMode === ServerMode.LIGHTWEIGHT) {
+        const answer = await vscode.window.showInformationMessage("Run/Debug feature requires Java language server to run in Standard mode. "
+            + "Do you want to switch it to Standard mode now?", "Yes", "Cancel");
+        if (answer === "Yes") {
+            if (api.serverMode === ServerMode.STANDARD) {
+                return true;
+            }
+
+            progressReporter?.report(importMessage);
+            return new Promise<boolean>((resolve) => {
+                progressReporter.getCancellationToken().onCancellationRequested(() => {
+                    resolve(false);
+                });
+                api.onDidServerModeChange((mode: string) => {
+                    if (mode === ServerMode.STANDARD) {
+                        resolve(true);
+                    }
+                });
+
+                vscode.commands.executeCommand("java.server.mode.switch", ServerMode.STANDARD, true);
+            });
+        }
+
+        return false;
+    } else if (api && api.serverMode === ServerMode.HYBRID) {
+        progressReporter.report(importMessage);
+        return new Promise<boolean>((resolve) => {
+            progressReporter.getCancellationToken().onCancellationRequested(() => {
+                resolve(false);
+            });
+            api.onDidServerModeChange((mode: string) => {
+                if (mode === ServerMode.STANDARD) {
+                    resolve(true);
+                }
+            });
+        });
+    }
+
+    return true;
+}
+
+export async function searchMainMethods(uri?: vscode.Uri): Promise<IMainClassOption[]> {
+    return resolveMainClass(uri);
+}
+
+export async function searchMainMethodsWithProgress(uri?: vscode.Uri): Promise<IMainClassOption[]> {
+    try {
+        return await vscode.window.withProgress<IMainClassOption[]>(
+            { location: vscode.ProgressLocation.Window },
+            async (p) => {
+                p.report({ message: "Searching main classes..." });
+                return resolveMainClass(uri);
+            });
+    } catch (ex) {
+        vscode.window.showErrorMessage(String((ex && ex.message) || ex));
+        throw ex;
+    }
+}
+
+async function isImportingProjects(): Promise<boolean> {
+    const extension = vscode.extensions.getExtension(JAVA_EXTENSION_ID);
+    if (!extension) {
+        return false;
+    }
+
+    const serverMode = getJavaServerMode();
+    if (serverMode === ServerMode.STANDARD || serverMode === ServerMode.HYBRID) {
+        const allCommands = await vscode.commands.getCommands();
+        return (!extension.isActive && allCommands.includes("java.show.server.task.status"))
+            || (extension.isActive && extension.exports?.serverMode === ServerMode.HYBRID);
+    }
+
+    return false;
+}
+
+function getJavaServerMode(): ServerMode {
+    return vscode.workspace.getConfiguration().get("java.server.launchMode")
+        || ServerMode.HYBRID;
+}
+
+export function launchJobName(configName: string, noDebug: boolean): string {
+    let jobName = noDebug ? "Run" : "Debug";
+    jobName += configName ? ` '${configName}'` : "";
+    return jobName;
+}
+
+export function launchJobNameByMainClass(mainClass: string, noDebug: boolean): string {
+    return launchJobName(mainClass.substring(mainClass.lastIndexOf(".") + 1), noDebug);
+}
+
+export function convertPdeUriToMainJavaFile(pdeUri : vscode.Uri) : vscode.Uri
+{
+    let dirname = path.dirname(pdeUri.fsPath);
+    let mainfolder = path.basename(dirname);
+    let javaUri = vscode.Uri.file(dirname+"\\build\\source\\"+mainfolder+".java");
+    return javaUri;
+}
+
+export function resolveProcessingNameFromFileUri(pdeUri : vscode.Uri) : string
+{
+    //let dirname = path.dirname(pdeUri.fsPath);
+    let mainfolder = path.basename(path.dirname(pdeUri.fsPath));
+    return mainfolder;
+}
+
+export function resolveRelativeFolderFromWorspacePath(filePath: string, workspaceFolder: vscode.WorkspaceFolder | undefined): string
+{
+    if (!workspaceFolder)
+        return "";
+
+    const workspacePath = workspaceFolder.uri.fsPath;
+    const sketchFullPath = path.dirname(filePath);
+    if(workspacePath === sketchFullPath)
+            return "";
+    if (filePath.startsWith(workspacePath)) 
+    {
+        const relativePath = path.relative(workspacePath, sketchFullPath);
+        return path.sep + relativePath;
+    }
+    return "";
+}
+
+export function isPathValid(directoryPath: string): boolean 
+{
+	try {
+	  const stat = fs.statSync(directoryPath);
+	  return stat != null;
+	} catch (error) {
+	  // If an error occurs, it means the directory doesn't exist or there was an issue accessing it.
+	  return false;
+	}
+}
+
+/**
+ * Transforms a path to a file uri
+ * 
+ * @param path Path of a file
+ * @returns Uniform resource identifier (URI) to the file path
+ */
+export function getUriFromPath(path : string) : string  
+{
+    let tempUri = path.replace(/\\/g, '/');
+	tempUri = tempUri.replace(':', '%3A');
+	return 'file:///'+ tempUri;
+}
+
+export function extractFileInfo(input: string): { filename?: string, lineNumber?: number, type?: string, rest?:string } | undefined
+{
+    // Regular expression for matching the filename
+    const filenamePattern = /^([a-zA-Z]:\\(?:[^\\/:*?"<>|\r\n]+\\)*[^\\/:*?"<>|\r\n]+):/;
+
+    // Try to match the input string with the filename pattern
+    const filenameMatch = input.match(filenamePattern);
+
+    // If there is no match, return undefined
+    if (!filenameMatch) {
+        return undefined;
+    }
+  
+    // Extract filename from the matched group
+    const filename = filenameMatch[1];
+
+    // Remove the filename part from the input string
+    const lineInput = input.substring(filenameMatch[0].length);
+    const linePartEndIndex = lineInput.indexOf(':');
+    const lineNumberMatch = lineInput.substring(0, linePartEndIndex);
+    // const integerRegex = /^(\d+)/;
+    // const lineNumberMatch = lineInput.match(integerRegex);
+    // if (!lineNumberMatch)
+    //     return undefined;
+    const lineNumber = parseInt(lineNumberMatch, 10);
+
+    // Type part
+    let type : string | undefined;
+    let rest : string;
+    const remainingInput = lineInput.substring(linePartEndIndex+2);    
+    const typePartIndex = remainingInput.indexOf(':');
+    if(typePartIndex >= 0)
+    {
+        const typeString = remainingInput.substring(0, typePartIndex);
+        if(typeString == 'warning' || typeString == 'error')
+        {
+            type = typeString.substring(0);
+            rest = remainingInput.substring(typePartIndex+2);
+        }
+        else
+            rest = remainingInput;
+    }
+    else
+        rest = remainingInput;
+
+     // Return the extracted values
+    return { filename, lineNumber, type, rest };
+  }
+
+export async function waitForJavaProjectImport(timeoutMs = 30000, intervalMs = 1000): Promise<boolean> {
+    const start = Date.now();
+    while (await isImportingProjects()) {
+        if (Date.now() - start > timeoutMs) {
+            return false; // Timed out waiting for import
+        }
+        await new Promise(res => setTimeout(res, intervalMs));
+    }
+    return true; // Import finished, workspace ready
+}
+
+export function sha256(content: string): string {
+    return crypto.createHash('sha256').update(content).digest('hex');
+}
+
+export function stringToUri(str: string): vscode.Uri {
+    try {
+        return vscode.Uri.parse(str);
+    } catch (error) {
+        console.error("Invalid URI string:", str, error);
+        return vscode.Uri.file(str); // Fallback to file URI
     }
 }

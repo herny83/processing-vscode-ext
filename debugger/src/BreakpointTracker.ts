@@ -98,9 +98,65 @@ export class BreakpointTracker implements vscode.DebugAdapterTracker
                     {
                         const pdeLocation : sketch.Location = sketch.convertJavaLineToPdeLine(stackFrames[i].line);
                         stackFrames[i].line = pdeLocation.line;
+                        if(stackFrames[i].source)
+                        {
+                            stackFrames[i].source.name = pdeLocation.name();
+                            stackFrames[i].source.path = pdeLocation.file;
+                        }
                     }
                 }
             }
         }
+        else if(message.type === 'event' && message.event === 'breakpoint' && message.body )
+        {
+            const breakpointBody = message.body; 
+            if( breakpointBody.breakpoint && this.breakpointIdsToConvert.includes(breakpointBody.breakpoint.id) )
+                breakpointBody.breakpoint.line = sketch.convertJavaLineToPdeLine(breakpointBody.breakpoint.line).line;
+        }
+        else if(message.type === 'event' && message.event === 'output' && message.body && message.body.category )
+        {
+            const mainJavaFile = sketch.getMainJavaFile();
+            const mainJavaName = sketch.getMainJavaName();
+            if(message.body.category == 'stderr')
+            {
+                const outp : string = message.body.output;
+                const fileInfo = utils.extractFileInfo(outp);
+                 if(fileInfo)
+                {
+                    if(fileInfo.filename && fileInfo.filename == mainJavaFile && fileInfo.lineNumber)
+                    {
+                        const pdeLocation : sketch.Location = sketch.convertJavaLineToPdeLine(fileInfo.lineNumber);
+                        message.body.line = pdeLocation.line;
+                        if(!message.body.source )
+                            message.body.source = { };
+                        message.body.source.name = pdeLocation.name();
+                        message.body.source.path = pdeLocation.file;
+                        if(fileInfo.rest)
+                            message.body.output = fileInfo.rest;
+                    }
+                }
+            }
+            if(message.body.source && message.body.line && message.body.line > 0)
+            {
+                if( (message.body.source.name && message.body.source.name == mainJavaName) ||
+                    (message.body.source.path && message.body.source.path == mainJavaFile) )
+                    {
+                        const pdeLocation : sketch.Location = sketch.convertJavaLineToPdeLine(message.body.line);
+                        message.body.line = pdeLocation.line;
+                        message.body.source.name = pdeLocation.name();
+                        message.body.source.path = pdeLocation.file;
+                    }
+            }
+            //console.info("#########: "+JSON.stringify(message));   
+        }
+        //console.info("#########: "+JSON.stringify(message));   
+    }
+
+    onWillStartSession(): void {
+        // Additional setup if needed
+    }
+
+    onWillStopSession(): void {
+        // Cleanup or finalization if needed
     }
 }

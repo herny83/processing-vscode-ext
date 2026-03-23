@@ -1,31 +1,3 @@
-// Stub: Fetches platform settings. Replace with real logic as needed.
-export async function fetchPlatformSettings(): Promise<any> {
-    return { latestSupportedJavaVersion: 17 };
-}
-
-
-// Stub: Resolves class filters. Replace with real logic as needed.
-export async function resolveClassFilters(filters: string[]): Promise<string[]> {
-    return filters;
-}
-
-// Stub: InlineKind enum for inline values.
-export enum InlineKind {
-    Evaluation = 0,
-    VariableLookup = 1
-}
-
-// Stub: InlineVariable type and resolveInlineVariables function.
-export interface InlineVariable {
-    range: { start: { line: number }, end: { line: number } };
-    kind: InlineKind;
-    name?: string;
-    expression?: string;
-    declaringClass?: string;
-}
-export async function resolveInlineVariables(_args: any): Promise<InlineVariable[]> {
-    return [];
-}
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
@@ -124,4 +96,69 @@ export async function detectPreviewFlag(className: string, projectName: string):
         [COMPILER_PB_ENABLE_PREVIEW_FEATURES]: "enabled",
     };
     return checkProjectSettings(className, projectName, true, expectedOptions);
+}
+
+export function resolveElementAtSelection(uri: string, line: number, character: number): Promise<any> {
+    return <Promise<any>>commands.executeJavaLanguageServerCommand(commands.JAVA_RESOLVE_ELEMENT_AT_SELECTION, uri, line, character);
+}
+
+export function resolveBuildFiles(): Promise<string[]> {
+    return <Promise<string[]>>commands.executeJavaLanguageServerCommand(commands.JAVA_RESOLVE_BUILD_FILES);
+}
+
+export async function isOnClasspath(uri: string): Promise<boolean> {
+    try {
+        return <boolean> await commands.executeJavaExtensionCommand(commands.JAVA_IS_ON_CLASSPATH, uri);
+    } catch (error) {
+        return true;
+    }
+}
+
+export function resolveJavaExecutable(mainClass: string, projectName: string) {
+    return commands.executeJavaLanguageServerCommand(commands.JAVA_RESOLVE_JAVAEXECUTABLE, mainClass, projectName);
+}
+
+export function fetchPlatformSettings(): any {
+    return commands.executeJavaLanguageServerCommand(commands.JAVA_FETCH_PLATFORM_SETTINGS);
+}
+
+export async function resolveClassFilters(patterns: string[]): Promise<string[]> {
+    return <string[]> await commands.executeJavaLanguageServerCommand(commands.JAVA_RESOLVE_CLASSFILTERS, ...patterns);
+}
+
+export async function resolveSourceUri(line: string): Promise<string> {
+    return <string> await commands.executeJavaLanguageServerCommand(commands.JAVA_RESOLVE_SOURCE_URI, line);
+}
+
+export async function resolveInlineVariables(inlineParams: InlineParams): Promise<InlineVariable[]> {
+    return <InlineVariable[]> await commands.executeJavaLanguageServerCommand(commands.JAVA_RESOLVE_INLINE_VARIABLES, JSON.stringify(inlineParams));
+}
+
+// tslint:disable-next-line:interface-name
+export interface InlineParams {
+    uri: string;
+    viewPort?: Range;
+    stoppedLocation: Range;
+}
+
+// tslint:disable-next-line:interface-name
+export enum InlineKind {
+    VariableLookup = 0,
+    Evaluation = 1,
+}
+
+// tslint:disable-next-line:interface-name
+export interface InlineVariable {
+    range: Range;
+    name: string;
+    kind: InlineKind;
+    expression: string;
+    declaringClass: string;
+}
+
+
+export async function ensureSourcePaths() : Promise<void>
+{
+    let sourcePaths = await commands.executeJavaLanguageServerCommand(commands.LIST_SOURCEPATHS);
+    out.logToOutput("    Source Paths: \n"+sourcePaths);
 }

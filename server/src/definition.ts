@@ -89,3 +89,5 @@ function calcDefinitionRange(ctx : ast.ParseTree | undefined) : Range | null
 	else
 		return parseUtils.calcRangeFromParseTree(ctx);
 }
+
+

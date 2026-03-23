@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep \"\\\\.ts$\")",
+      "Bash(for dir:*)",
+      "Bash(do echo:*)",
+      "Read(//d/PersonalProjects/ProcessingVSCodeExt/processing-ext/**)",
+      "Bash(done)",
+      "Bash(npm run:*)",
+      "Bash(ls -d /d/PersonalProjects/ProcessingVSCodeExt/processing-ext/out/*)"
+    ]
+  }
+}

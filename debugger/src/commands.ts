@@ -98,6 +98,10 @@ export async function ensureJavaExtensionActivation(progressReporter?: { report:
     if (!javaExtension.isActive) {
         if (progressReporter)
             progressReporter.report("Activating Java Extension...");
+
+        out.logToOutput("Activating Java Extension...");
         await javaExtension.activate();
+        // Wait 5 seconds after activation to allow full initialization
+        await new Promise(resolve => setTimeout(resolve, 20000));
     }
 }

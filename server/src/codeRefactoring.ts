@@ -37,7 +37,7 @@ export function pipeLine(unProcessedCode: string): string {
  * @returns Line with increased indent
  */
 function increaseIndent(line : string) : string{
-	return `\t${line}`
+	return `	${line}`
 }
 
 /**

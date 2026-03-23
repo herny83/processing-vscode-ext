@@ -1,0 +1,23 @@
+{
+    "compilerOptions": {
+        "target": "es6",
+        "esModuleInterop": true,
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "sourceMap": true,
+        "outDir": "out",
+        "skipLibCheck": true
+    },
+    "include": [
+        "client/src/**/*",
+        "server/src/**/*",
+        "debugger/src/**/*",
+        "shared/src/**/*"
+    ],
+    "exclude": [
+        "node_modules",
+        "out",
+        "**/grammar",
+        "**/.vscode-test"
+    ]
+}

@@ -1,9 +1,23 @@
 {
-  "extends": "../tsconfig.base.json",
-  "compilerOptions": {
-    "outDir": "./out",
-    "rootDir": "./src",
-    "target": "es2015"
-  },
-  "include": ["src/**/*"]
+    "compilerOptions": {
+        "module": "commonjs",
+        "target": "es6",
+        "rootDir": "src",
+        "outDir": "out",
+        "sourceMap": true,
+        "noUnusedLocals": true,
+        "noImplicitThis": true,
+        "noImplicitAny": true,
+        "noImplicitReturns": true,
+        "noUnusedParameters": true,
+        "strictNullChecks": true,
+        "alwaysStrict": true
+    },
+    "include": [
+		"src"
+	],
+    "exclude": [
+        "node_modules",
+        ".vscode-test"
+    ]
 }

@@ -1,3 +1,4 @@
+
 export const LS_FAILS_TO_START = "java-language-support-extension-fails-to-start";
 export const FAILED_TO_RESOLVE_CLASSPATH = "failed-to-resolve-classpath";
 export const REQUEST_TYPE_NOT_SUPPORTED = "request-type-xyz-is-not-supported-only-launch-and-attach-are-supported";

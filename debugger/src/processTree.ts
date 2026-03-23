@@ -1,4 +1,3 @@
-// NOTE: If you see an error about MapIterator and for-of, set "target": "es2015" or higher in your tsconfig.json.
 /*---------------------------------------------------------------------------------------------
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
@@ -55,7 +54,7 @@ export function getProcesses(one: (pid: number, ppid: number, command: string, a
 
 	// returns a function that aggregates chunks of data until one or more complete lines are received and passes them to a callback.
 	function lines(callback: (a: string) => void) {
-		let unfinished = '';    // unfinished last line of chunk
+		let unfinished = '';	// unfinished last line of chunk
 		return (data: string | Buffer) => {
 			const lines = data.toString().split(/\r?\n/);
 			const finishedLines = lines.slice(0, lines.length - 1);
@@ -99,29 +98,104 @@ export function getProcesses(one: (pid: number, ppid: number, command: string, a
 							if (end > 0) {
 								command = args.substr(0, end);
 								args = args.substr(end + 1);
+							} else {
+								args = '';
 							}
 						}
 						one(pid, ppid, command, args, date);
 					}
 				}
 			}));
-			proc.on('close', () => resolve());
-			proc.on('error', reject);
-		} else {
-			// Unix
-			proc = spawn('ps', ['-eo', 'ppid,pid,args']);
+
+		} else if (process.platform === 'darwin') {	// OS X
+
+			proc = spawn('/bin/ps', [ '-x', '-o', `pid,ppid,comm=${'a'.repeat(256)},command` ]);
 			proc.stdout.setEncoding('utf8');
 			proc.stdout.on('data', lines(line => {
-				const parts = line.trim().split(/\s+/, 3);
-				if (parts.length === 3) {
-					const ppid = Number(parts[0]);
-					const pid = Number(parts[1]);
-					const command = parts[2];
-					one(pid, ppid, command, '', undefined);
+
+				const pid = Number(line.substr(0, 5));
+				const ppid = Number(line.substr(6, 5));
+				const command = line.substr(12, 256).trim();
+				const args = line.substr(269 + command.length);
+
+				if (!isNaN(pid) && !isNaN(ppid)) {
+					one(pid, ppid, command, args);
 				}
 			}));
-			proc.on('close', () => resolve());
-			proc.on('error', reject);
+
+		} else {	// linux
+
+			proc = spawn('/bin/ps', [ '-ax', '-o', 'pid:6,ppid:6,comm:20,command' ]);	// we specify the column width explicitly
+			proc.stdout.setEncoding('utf8');
+			proc.stdout.on('data', lines(line => {
+				
+				// the following substr arguments must match the column width specified for the "ps" command above
+				// regular substr is deprecated
+				const pid = Number(substr(line, 0, 6));
+				const ppid = Number(substr(line, 7, 6));
+				const shortName = substr(line, 14, 20).trim()
+				const fullCommand = substr(line, 35)
+
+				let command = shortName;
+				let args = fullCommand;
+
+				const pos = fullCommand.indexOf(shortName);
+				if (pos >= 0) {
+					// binaries with spaces in path may not work
+					// possible solution to read directly from /proc
+					const commandEndPositionMaybe = fullCommand.indexOf(" ", pos + shortName.length);
+					const commandEndPosition = commandEndPositionMaybe < 0 ? fullCommand.length : commandEndPositionMaybe;
+					command = fullCommand.substring(0, commandEndPosition)
+					args = fullCommand.substring(commandEndPosition).trimStart()
+				}
+
+
+				if (!isNaN(pid) && !isNaN(ppid)) {
+					one(pid, ppid, command, args);
+				}
+			}));
 		}
+
+		proc.on('error', err => {
+			reject(err);
+		});
+
+		proc.stderr.setEncoding('utf8');
+		proc.stderr.on('data', data => {
+			const e = data.toString();
+			if (e.indexOf('screen size is bogus') >= 0) {
+				// ignore this error silently; see https://github.com/microsoft/vscode/issues/75932
+			} else {
+				reject(new Error(data.toString()));
+			}
+		});
+
+		proc.on('close', (code, signal) => {
+			if (code === 0) {
+				resolve();
+			} else if (code !== null && code > 0) {
+				reject(new Error(`process terminated with exit code: ${code}`));
+			}
+			if (signal) {
+				reject(new Error(`process terminated with signal: ${signal}`));
+			}
+		});
+
+		proc.on('exit', (code, signal) => {
+			if (typeof code === 'number') {
+				if (code === 0) {
+					//resolve();
+				} else if (code > 0) {
+					reject(new Error(`process terminated with exit code: ${code}`));
+				}
+			}
+			if (signal) {
+				reject(new Error(`process terminated with signal: ${signal}`));
+			}
+		});
 	});
+}
+
+function substr(str: string, startIndex: number, length?: number) {
+	return str.slice(startIndex, length != undefined ? startIndex + length : str.length)
 }

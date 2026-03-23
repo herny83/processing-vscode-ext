@@ -28,81 +28,6 @@ export async function getShortenApproachForCLI(config: vscode.DebugConfiguration
     return (await shouldShortenIfNecessary(config)) ? recommendedShortenApproach : shortenApproach.none;
 }
 
-// --- Implementation of missing helpers ---
-function flattenMajorVersion(version: string): number {
-    if (version.startsWith("1.")) {
-        version = version.substring(2);
-    }
-    const regexp = /\d+/g;
-    const match = regexp.exec(version);
-    let javaVersion = 0;
-    if (match) {
-        javaVersion = parseInt(match[0], 10);
-    }
-    return javaVersion;
-}
-
-async function shouldShortenIfNecessary(config: vscode.DebugConfiguration): Promise<boolean> {
-    const cliLength = await inferLaunchCommandLength(config);
-    const classPaths = config.classPaths || [];
-    const modulePaths = config.modulePaths || [];
-    const classPathLength = classPaths.join(path.delimiter).length;
-    const modulePathLength = modulePaths.join(path.delimiter).length;
-    if (!config.console || config.console === "internalConsole") {
-        return cliLength >= getMaxProcessCommandLineLength(config) || classPathLength >= getMaxArgLength() || modulePathLength >= getMaxArgLength();
-    } else {
-        return classPaths.length > 1 || modulePaths.length > 1;
-    }
-}
-
-function getMaxProcessCommandLineLength(config: vscode.DebugConfiguration): number {
-    const ARG_MAX_WINDOWS = 32768;
-    const ARG_MAX_MACOS = 262144;
-    const ARG_MAX_LINUX = 2097152;
-    if (process.platform === "win32") {
-        return ARG_MAX_WINDOWS - 2048;
-    } else if (process.platform === "darwin") {
-        return ARG_MAX_MACOS - getEnvironmentLength(config) - 2048;
-    } else if (process.platform === "linux") {
-        return ARG_MAX_LINUX - getEnvironmentLength(config) - 2048;
-    }
-    return Number.MAX_SAFE_INTEGER;
-}
-
-function getEnvironmentLength(config: vscode.DebugConfiguration): number {
-    const env = config.env || {};
-    return _.isEmpty(env) ? 0 : Object.keys(env).map((key) => strlen(key) + strlen(env[key]) + 1).reduce((a, b) => a + b);
-}
-
-function strlen(str: string): number {
-    return str ? str.length : 0;
-}
-
-function getMaxArgLength(): number {
-    const MAX_ARG_STRLEN_LINUX  = 131072;
-    if (process.platform === "linux") {
-        return MAX_ARG_STRLEN_LINUX - 2048;
-    }
-    return Number.MAX_SAFE_INTEGER;
-}
-
-async function checkVersionByCLI(javaExec: string): Promise<number> {
-    if (!javaExec) {
-        return 0;
-    }
-    return new Promise((resolve) => {
-        cp.execFile(javaExec, ["-version"], {}, (_error, _stdout, stderr) => {
-            const regexp = /version "(.*)"/g;
-            const match = regexp.exec(stderr);
-            if (!match) {
-                return resolve(0);
-            }
-            const javaVersion = flattenMajorVersion(match[1]);
-            resolve(javaVersion);
-        });
-    });
-}
-
 /**
  * Validates whether the specified runtime version could be supported by the Java tooling.
  * @param runtimeVersion the target runtime version
@@ -179,5 +104,96 @@ async function checkVersionInReleaseFile(javaHome: string): Promise<number> {
     } catch (error) {
         // ignore
     }
+
     return 0;
+}
+
+/**
+ * Get version by parsing `JAVA_HOME/bin/java -version`
+ */
+async function checkVersionByCLI(javaExec: string): Promise<number> {
+    if (!javaExec) {
+        return 0;
+    }
+    return new Promise((resolve) => {
+        cp.execFile(javaExec, ["-version"], {}, (_error, _stdout, stderr) => {
+            const regexp = /version "(.*)"/g;
+            const match = regexp.exec(stderr);
+            if (!match) {
+                return resolve(0);
+            }
+            const javaVersion = flattenMajorVersion(match[1]);
+            resolve(javaVersion);
+        });
+    });
+}
+
+function flattenMajorVersion(version: string): number {
+    // Ignore '1.' prefix for legacy Java versions
+    if (version.startsWith("1.")) {
+        version = version.substring(2);
+    }
+
+    // look into the interesting bits now
+    const regexp = /\d+/g;
+    const match = regexp.exec(version);
+    let javaVersion = 0;
+    if (match) {
+        javaVersion = parseInt(match[0], 10);
+    }
+
+    return javaVersion;
+}
+
+async function shouldShortenIfNecessary(config: vscode.DebugConfiguration): Promise<boolean> {
+    const cliLength = await inferLaunchCommandLength(config);
+    const classPaths = config.classPaths || [];
+    const modulePaths = config.modulePaths || [];
+    const classPathLength = classPaths.join(path.delimiter).length;
+    const modulePathLength = modulePaths.join(path.delimiter).length;
+    if (!config.console || config.console === "internalConsole") {
+        return cliLength >= getMaxProcessCommandLineLength(config) || classPathLength >= getMaxArgLength() || modulePathLength >= getMaxArgLength();
+    } else {
+        return classPaths.length > 1 || modulePaths.length > 1;
+    }
+}
+
+function getMaxProcessCommandLineLength(config: vscode.DebugConfiguration): number {
+    const ARG_MAX_WINDOWS = 32768;
+    const ARG_MAX_MACOS = 262144;
+    const ARG_MAX_LINUX = 2097152;
+    // for Posix systems, ARG_MAX is the maximum length of argument to the exec functions including environment data.
+    // POSIX suggests to subtract 2048 additionally so that the process may safely modify its environment.
+    // see https://www.in-ulm.de/~mascheck/various/argmax/
+    if (process.platform === "win32") {
+        // https://blogs.msdn.microsoft.com/oldnewthing/20031210-00/?p=41553/
+        // On windows, the max process commmand line length is 32k (32768) characters.
+        return ARG_MAX_WINDOWS - 2048;
+    } else if (process.platform === "darwin") {
+        return ARG_MAX_MACOS - getEnvironmentLength(config) - 2048;
+    } else if (process.platform === "linux") {
+        return ARG_MAX_LINUX - getEnvironmentLength(config) - 2048;
+    }
+
+    return Number.MAX_SAFE_INTEGER;
+}
+
+function getEnvironmentLength(config: vscode.DebugConfiguration): number {
+    const env = config.env || {};
+    return _.isEmpty(env) ? 0 : Object.keys(env).map((key) => strlen(key) + strlen(env[key]) + 1).reduce((a, b) => a + b);
+}
+
+function strlen(str: string): number {
+    return str ? str.length : 0;
+}
+
+function getMaxArgLength(): number {
+    const MAX_ARG_STRLEN_LINUX  = 131072;
+    if (process.platform === "linux") {
+        // On Linux, MAX_ARG_STRLEN (kernel >= 2.6.23) is the maximum length of a command line argument (or environment variable). Its value
+        // cannot be changed without recompiling the kernel.
+        return MAX_ARG_STRLEN_LINUX - 2048;
+    }
+
+    return Number.MAX_SAFE_INTEGER;
 }
