@@ -1,5 +1,33 @@
-node_modules/**
-client/node_modules/**
-server/node_modules/**
-shared/node_modules/**
-**/node_modules/**
+# Source files (compiled to out/)
+src/
+client/src/
+server/src/
+debugger/src/
+shared/src/
+
+# Grammar source (generated files are in server/src/grammer/)
+server/grammar/
+
+# Config and tooling
+.github/
+.claude/
+.vscode/
+scripts/
+test/
+tsconfig*.json
+**/tsconfig.json
+**/*.ts
+!**/*.d.ts
+
+# Development files
+.gitignore
+.eslintrc*
+.prettierrc*
+CODE_STYLE.md
+CONTRIBUTING.md
+SECURITY.md
+
+# Misc
+**/.vscode-test/
+**/node_modules/
+**/*.map

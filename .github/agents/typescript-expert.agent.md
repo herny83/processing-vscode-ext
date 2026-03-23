@@ -19,11 +19,13 @@ You are a TypeScript expert reviewing code in the Processing VS Code Extension. 
 
 ## Project-Specific Context
 
-- The project uses TypeScript 5.9.3 with strict mode
+- TypeScript 5.9.3 with strict mode
 - Monorepo with 4 workspaces: client, server, debugger, shared
-- Each workspace has its own `tsconfig.json` extending `tsconfig.base.json`
-- Module system: CommonJS (workspaces), ESNext (root)
-- The `server/src/antlr-sym/` directory has intentional type mismatches due to ongoing migration — flag these but don't treat them as bugs to fix in isolation
+- Each workspace has its own `tsconfig.json`
+- Root `tsconfig.json` compiles only `src/` (the thin extension orchestrator)
+- Module system: CommonJS
+- Server uses `antlr4-c3` symbol system with P-prefixed wrappers in `server/src/antlr-sym/`
+- Generated parser files in `server/src/grammer/` import from `antlr4ts` (migration to `antlr4` planned)
 
 ## Code Style Enforcement
 

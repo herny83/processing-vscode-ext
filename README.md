@@ -44,5 +44,51 @@ Unified VS Code extension for Processing language support, combining all feature
 ## Getting Started
 Instructions will be added as the project evolves.
 
+## AI-Assisted Development
+
+This project includes configuration for GitHub Copilot (and compatible AI assistants) to help contributors work effectively. All configuration lives in `.github/`.
+
+### Copilot Instructions
+
+`.github/copilot-instructions.md` is loaded automatically by Copilot in VS Code. It contains the project architecture, code style rules, build commands, and key patterns. You don't need to do anything — Copilot reads it on its own.
+
+### Prompts
+
+Prompts are reusable task templates you invoke from the Copilot Chat panel. Type `#` in the chat input to browse them, or reference them directly:
+
+| Prompt | What it does |
+|--------|-------------|
+| `continue-plan` | Reads PROGRESS.md, picks up the next step from the master plan, executes it |
+| `fix-compilation` | Diagnoses and fixes TypeScript compilation errors |
+| `antlr4ts-migration` | Migrates a file's imports from antlr4ts to antlr4 |
+| `lsp-feature-implementation` | Implements or audits an LSP feature (completion, hover, etc.) |
+| `fix-code-style` | Fixes code style violations (tabs, Allman braces) |
+| `onboarding` | Scans the project and generates context for a new contributor |
+
+### Agents
+
+Agents are specialized personas you can invoke with `@` in Copilot Chat:
+
+| Agent | What it does |
+|-------|-------------|
+| `@typescript-expert` | Reviews code for type safety, strict typing, compilation errors |
+| `@ProcessingSymbolExpert` | Reviews symbol architecture against Processing language semantics |
+| `@onboarding-agent` | Analyzes the project and suggests Copilot customizations |
+
+### Skills
+
+Skills are multi-step procedures agents can use. They are not invoked directly — agents call them when relevant:
+
+| Skill | What it does |
+|-------|-------------|
+| `lsp-feature-implementation` | Step-by-step procedure for implementing LSP features |
+
+### Master Plan & Progress
+
+- `.github/PLAN.md` — The full phased plan (v1 roadmap)
+- `.github/PROGRESS.md` — Checklist tracking what's done and what's next
+
+Use `continue-plan` to automatically resume from where the last session left off.
+
 ## License
 MIT

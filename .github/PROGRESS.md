@@ -12,65 +12,68 @@ After completing a step:
 
 ---
 
-
 ## Last Session
 
-**Date**: March 22, 2026
-**Completed**: 1.3 — Fixed PThrowsSymbol.ts and PEnumMemberSymbol.ts: type property and SymbolKind
-**Next step**: 1.4 — Fix PUtils.ts — replace antlr4-c3 imports, unify CallContext
-**Error count**: ~997
-**Notes**: Step 1.3 verified, both files compile clean
+**Date**: March 23, 2026
+**Completed**: Full audit. Rewrote plan for v1. Removed antlr4 from server deps. Created .vscodeignore.
+**Next step**: 1.1 — Commit current structural changes
+**Error count**: 0 (all workspaces compile)
+**Notes**: Previous symbol migration was reverted. New plan: unify → isolate antlr4ts → Processing v4.0 → audit → bundle → publish.
 
 ---
 
-## Phase 1: Compilation
+## Phase 1: Finish Unification & Cleanup
 
-- [x] **1.1** Fix new symbol system errors (ClassSymbol, InterfaceSymbol, EnumSymbol, LibraryTable)  # 2026-03-22: All errors fixed, verified clean
-- [x] **1.2** Fix PType.ts — add missing TypeKind/PrimitiveKind/ReferenceKind/IType imports  # 2026-03-22: All errors fixed, verified clean
-- [x] **1.3** Fix PThrowsSymbol.ts and PEnumMemberSymbol.ts — type: PType vs Type conflict  # 2026-03-22: All errors fixed, verified clean
-- [ ] **1.4** Fix PUtils.ts — replace antlr4-c3 imports, unify CallContext
-- [ ] **1.5** Fix PSymbolTable.ts — stop extending antlr4-c3 SymbolTable
-- [ ] **1.6** Fix antlr-sym/index.ts exports
-- [ ] **1.7** Fix astutils.ts
-- [ ] **1.8** Fix DocumentSymbols.ts
-- [ ] **1.9** Fix javaClassVisitor.ts — remove antlr4-c3 import, replace PInterfaceSymbol/PTypeKind
-- [ ] **1.10** Fix javaModules.ts
-- [ ] **1.11** Fix symbols.ts (SymbolTableVisitor)
-- [ ] **1.12** Fix sketch.ts — remove antlr4-c3 import, replace deprecated types
-- [ ] **1.13** Fix definitionsMap.ts (390 errors) — biggest migration task
-- [ ] **1.14** Fix LSP feature files (completion, hover, references, rename, definition, lens)
-- [ ] **1.15** Fix server.ts
-- [ ] **1.16** Fix remaining server files (settings, codeRefactoring, perfo)
-- [ ] **1.17** Fix debugger errors — install missing deps, fix null checks
-- [ ] **1.18** Cleanup antlr-sym — remove empty files, evaluate full removal
-- [ ] **1.19** Final validation — 0 errors, vsix builds, extension loads
+- [ ] **1.1** Commit current structural changes (src/extension.ts, unified package.json, debugger updates)
+- [ ] **1.2** Verify extension loads in dev host (LSP + debugger both activate)
+- [ ] **1.3** Remove debugger's stale vscode-languageclient@6.0.0-next.9 (inline Range conversion)
+- [ ] **1.4** Clean up unused dependencies
+- [ ] **1.5** Bundling setup (esbuild) — moved here from Phase 6 to catch packaging issues early
 
-## Phase 2: LSP Features
+## Phase 2: Isolate antlr4ts
 
-- [ ] **2.1** Diagnostics / Linting
-- [ ] **2.2** Code Completion
-- [ ] **2.3** Hover
-- [ ] **2.4** Go to Definition
-- [ ] **2.5** Find References
-- [ ] **2.6** Rename
-- [ ] **2.7** Document Symbols (Outline)
-- [ ] **2.8** Signature Help
-- [ ] **2.9** Code Lens
-- [ ] **2.10** Re-enable Preprocessing
+- [ ] **2.1** Create antlr4ts shim (server/src/antlr-types.ts)
+- [ ] **2.2** Update LIGHT consumer files (7 files: lens, DocumentSymbols, definition, hover, rename, references, sketch)
+- [ ] **2.3** Update MEDIUM consumer files (astutils, completion)
+- [ ] **2.4** Update CRITICAL consumer files (symbols, definitionsMap, parser, ProcessingErrorListener)
+- [ ] **2.5** Verify no direct antlr4ts imports remain outside shim + generated grammar
 
-## Phase 3: Debugger
+## Phase 3: Processing v4.0+
 
-- [ ] **3.1** Debug adapter setup
-- [ ] **3.2** Launch configuration
-- [ ] **3.3** Breakpoint mapping
-- [ ] **3.4** Inline values
-- [ ] **3.5** Hot code replacement
-- [ ] **3.6** Compile and run (no debugger)
+> Expand into concrete sub-steps before starting (see PLAN.md).
 
-## Phase 4: Polish
+- [ ] **3.1** Research Processing 4.x language changes
+- [ ] **3.2** Update grammar if needed
+- [ ] **3.3** Update standard library definitions
+- [ ] **3.4** Test Processing path detection for v4.x
 
-- [ ] **4.1** Test infrastructure
-- [ ] **4.2** Bundling
-- [ ] **4.3** CI/CD
-- [ ] **4.4** Marketplace metadata
-- [ ] **4.5** Final validation
+## Phase 4: LSP Feature Audit
+
+> Expand into concrete sub-steps before starting (see PLAN.md).
+
+- [ ] **4.0** Create test fixtures (sample .pde sketches)
+- [ ] **4.1** Diagnostics
+- [ ] **4.2** Code Completion
+- [ ] **4.3** Hover
+- [ ] **4.4** Go to Definition
+- [ ] **4.5** Find References & Rename
+- [ ] **4.6** Document Symbols & Signature Help
+
+## Phase 5: Debugger Validation
+
+> Expand into concrete sub-steps before starting (see PLAN.md).
+
+- [ ] **5.0** Verify debugger prerequisites
+- [ ] **5.1** Launch configuration
+- [ ] **5.2** Breakpoints and stepping
+- [ ] **5.3** Run without debugger
+- [ ] **5.4** Inline values & HCR
+
+## Phase 6: Polish & Publish
+
+> Expand into concrete sub-steps before starting (see PLAN.md).
+
+- [ ] **6.1** Optimize bundle
+- [ ] **6.2** Marketplace metadata
+- [ ] **6.3** CI/CD (GitHub Actions)
+- [ ] **6.4** Final validation (use `/publish-checklist`)
