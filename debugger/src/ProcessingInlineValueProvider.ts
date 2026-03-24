@@ -1,23 +1,36 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
-import * as CodeConverter from "vscode-languageclient/lib/codeConverter";
 import * as server from "vscode-languageserver-types"
-import * as ProtocolConverter from "vscode-languageclient/lib/protocolConverter";
 import * as lsp from "./languageServerPlugin";
 import * as utility from "./utility";
 import * as sketch from "./sketch";
 import * as vscode from "vscode";
 
-const protoConverter: ProtocolConverter.Converter = ProtocolConverter.createConverter();
-const codeConverter: CodeConverter.Converter = CodeConverter.createConverter();
+
+// Direct mapping between vscode.Range and server.Range (same shape)
+function toServerRange(r: vscode.Range): server.Range
+{
+	return {
+		start: { line: r.start.line, character: r.start.character },
+		end: { line: r.end.line, character: r.end.character }
+	};
+}
+
+function toVscodeRange(r: server.Range): vscode.Range
+{
+	return new vscode.Range(
+		r.start.line, r.start.character,
+		r.end.line, r.end.character
+	);
+}
 
 export class ProcessingInlineValuesProvider implements vscode.InlineValuesProvider {
 
 	public async provideInlineValues(document: vscode.TextDocument, viewPort: vscode.Range, context: vscode.InlineValueContext): Promise<vscode.InlineValue[]> 
 	{
 		let documentUri : string = document.uri.toString();
-		let codeRange : server.Range = codeConverter.asRange(viewPort);
-		let loc : server.Range = codeConverter.asRange(context.stoppedLocation);
+		let codeRange : server.Range = toServerRange(viewPort);
+		let loc : server.Range = toServerRange(context.stoppedLocation);
 		let hasPdeConvert : boolean = false;
 		if(documentUri.endsWith(".pde"))
 		{
@@ -43,7 +56,6 @@ export class ProcessingInlineValuesProvider implements vscode.InlineValuesProvid
 				const endloc : sketch.Location = sketch.convertJavaLineToPdeLine(variables[i].range.end.line);
 				variables[i].range.start.line = startloc.line;
 				variables[i].range.end.line = endloc.line;
-
 			}
 		}
 		if (!variables || !variables.length)
@@ -77,17 +89,18 @@ export class ProcessingInlineValuesProvider implements vscode.InlineValuesProvid
 		const result: vscode.InlineValue[] = [];
 		let next = 0;
 		for (const variable of variables) {
+			const vsRange = toVscodeRange(variable.range);
 			if (variable.kind === lsp.InlineKind.VariableLookup) {
-				result.push(new vscode.InlineValueVariableLookup(protoConverter.asRange(variable.range), variable.name, true));
+				result.push(new vscode.InlineValueVariableLookup(vsRange, variable.name, true));
 			} else if (resolvedVariables && resolvedVariables.length > next) {
 				const resolvedValue = resolvedVariables[next++];
 				if (resolvedValue) {
-					result.push(new vscode.InlineValueText(protoConverter.asRange(variable.range), `${variable.name} = ${resolvedValue.value}`));
+					result.push(new vscode.InlineValueText(vsRange, `${variable.name} = ${resolvedValue.value}`));
 				} else {
-					result.push(new vscode.InlineValueEvaluatableExpression(protoConverter.asRange(variable.range), variable.name));
+					result.push(new vscode.InlineValueEvaluatableExpression(vsRange, variable.name));
 				}
 			} else {
-				result.push(new vscode.InlineValueEvaluatableExpression(protoConverter.asRange(variable.range), variable.name));
+				result.push(new vscode.InlineValueEvaluatableExpression(vsRange, variable.name));
 			}
 		}
 		return result;
