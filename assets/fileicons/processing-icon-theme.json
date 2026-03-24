@@ -30,9 +30,9 @@
 		"_file_light": {
 			"iconPath": "./images/Document_16x.svg"
         },
-        "_proc_specific": {
-            "iconPath": "./images/processingImg.png"
-        }
+		"_proc_specific": {
+			"iconPath": "./images/processing_2021_logo.svg"
+		}
 	},
 
 	"folderExpanded": "_folder_open_dark",

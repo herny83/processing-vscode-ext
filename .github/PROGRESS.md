@@ -16,11 +16,12 @@ After completing a step:
 ## Last Session
 
 
+
 **Date**: March 24, 2026
-**Completed**: 1.4 — Cleaned up unused dependencies in server, verified client/debugger clean
-**Next step**: 1.5 — Bundling setup (esbuild)
+**Completed**: 1.5 — Bundling setup (esbuild), validated .vsix size and output
+**Next step**: 2.1 — Create antlr4ts shim (server/src/antlr-types.ts)
 **Error count**: 0 (all workspaces compile)
-**Notes**: Removed unused server deps, double-checked all workspaces, no further cleanup needed.
+**Notes**: Bundling with esbuild set up, all entry points bundle, .vsix size 4.36MB, ready for antlr4ts isolation.
 
 ---
 
@@ -31,7 +32,7 @@ After completing a step:
 - [x] **1.2** Verify extension loads in dev host (LSP + debugger both activate) — 2026-03-23: Extension loads, LSP and debugger activate, type errors resolved
 - [x] **1.3** Remove debugger's stale vscode-languageclient@6.0.0-next.9 (inline Range conversion) — 2026-03-24: Removed dependency, inlined Range conversion, validated build
 - [x] **1.4** Clean up unused dependencies — 2026-03-24: Removed unused server deps, verified client/debugger clean
-- [ ] **1.5** Bundling setup (esbuild) — moved here from Phase 6 to catch packaging issues early
+- [x] **1.5** Bundling setup (esbuild) — 2026-03-24: Bundling with esbuild set up, all entry points bundle, .vsix size 4.36MB
 
 ## Phase 2: Isolate antlr4ts
 

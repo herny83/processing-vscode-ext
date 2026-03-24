@@ -244,16 +244,40 @@
     "onDebug"
   ],
   "scripts": {
-    "build": "npm run build -w client && npm run build -w server && npm run build -w debugger && npm run build -w shared && tsc -p .",
-    "test": "npm run test -w client && npm run test -w server && npm run test -w debugger && npm run test -w shared",
-    "compile": "npm run build -w client && npm run build -w server && npm run build -w debugger && npm run build -w shared && tsc -p ."
+    "build:client": "tsc -p client",
+    "build:server": "tsc -p server",
+    "build:debugger": "tsc -p debugger",
+    "build:shared": "tsc -p shared",
+    "build": "npm run build:client && npm run build:server && npm run build:debugger && npm run build:shared && tsc -p .",
+    "watch:client": "tsc -p client --watch",
+    "watch:server": "tsc -p server --watch",
+    "watch:debugger": "tsc -p debugger --watch",
+    "watch:shared": "tsc -p shared --watch",
+    "test": "echo \"No tests yet\"",
+    "build:bundle": "node esbuild.mjs"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1",
+    "vscode-languageserver": "^9.0.1",
+    "vscode-languageserver-textdocument": "^1.0.11",
+    "@vscode/debugadapter": "^1.64.0",
+    "@vscode/debugprotocol": "^1.64.0",
+    "lodash": "^4.17.21",
+    "semver": "^7.3.7",
+    "antlr4-c3": "3.0.1",
+    "adm-zip": "^0.5.10",
+    "@xmcl/asm": "^1.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
     "@types/vscode": "^1.80.0",
+    "@types/lodash": "^4.14.202",
+    "@types/semver": "^7.5.3",
+    "@types/adm-zip": "^0.5.0",
+    "@types/java": "^0.5.27",
     "antlr4ts-cli": "^0.5.0-alpha.4",
-    "typescript": "^5.9.3",
-    "vscode-languageclient": "^9.0.1"
+    "esbuild": "^0.27.4",
+    "typescript": "^5.9.3"
   },
   "workspaces": [
     "client",
@@ -265,7 +289,6 @@
     "type": "git",
     "url": "https://github.com/herny83/processing-vscode-ext.git"
   },
-  "dependencies": {},
   "vsce": {
     "exclude": [
       "node_modules/**"

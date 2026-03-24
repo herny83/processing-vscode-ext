@@ -30,4 +30,15 @@ SECURITY.md
 # Misc
 **/.vscode-test/
 **/node_modules/
+node_modules/
+client/node_modules/
+server/node_modules/
+debugger/node_modules/
+shared/node_modules/
 **/*.map
+
+# Root build/package artifacts
+package-lock.json
+dev-tools/
+**/*.vsix
+**/*.zip
