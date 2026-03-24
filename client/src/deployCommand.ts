@@ -28,7 +28,7 @@ function needsCliSubcommand(processingPath: string, processingVersion?: string):
 
 export async function exportSketch(processingPath: string, sketchPath:string, outputRelativePath: string, processingVersion?: string)
 {
-   console.log(`[ProcessingDebug] Exporting sketch from ${sketchPath}`);
+   console.log(`[ProcessingDebug] Exporting sketch from ${sketchPath} using Processing v${processingVersion || '<unknown>'}`);
     if (!sketchPath) {
         vscode.window.showErrorMessage("Cannot find a valid Processing sketch in the workspace.");
         return;
@@ -45,12 +45,16 @@ export async function exportSketch(processingPath: string, sketchPath:string, ou
     let processingFullPath = path.join(processingPath, execName);
     const useCli = needsCliSubcommand(processingPath, processingVersion);
 
+    // Remove trailing path separators to avoid \"escaping issues in shell commands
+    const safeSketcthPath = currentSketchPath.replace(/[\\/]+$/, '');
+    const safeOutputPath =  currentOutputPath.replace(/[\\/]+$/, '');
+
     let exportCmd = `"${processingFullPath}"`;
     if (useCli)
         exportCmd += " cli";
     exportCmd += " --force";
-    exportCmd += ` --sketch="${currentSketchPath}"`;
-    exportCmd += ` --output="${currentOutputPath}"`;
+    exportCmd += ` --sketch="${safeSketcthPath}"`;
+    exportCmd += ` --output="${safeOutputPath}"`;
     exportCmd += " --variant=windows-amd64";
     exportCmd += " --export";
 
@@ -64,7 +68,9 @@ export async function exportSketch(processingPath: string, sketchPath:string, ou
     exportEnded = false;
     await vscode.window.withProgress(options, async (progress) => {
         progress.report({ message: "Exporting application..." });
-        proc.exec(exportCmd, resolveSketchOutputBuild);
+        proc.exec(exportCmd, (error, stdout, stderr) => {
+            resolveSketchOutputBuild(error, stdout, stderr);
+        });
         // Wait until exportEnded becomes true before closing progress
         await WaitUntilExportEnded();
     });
@@ -81,17 +87,81 @@ export async function WaitUntilExportEnded(): Promise<void> {
     });
 }
 
-function resolveSketchOutputBuild(error: proc.ExecException, stdout: string, stderr: string)
+/**
+ * Get the total size of all files in a directory (recursively).
+ * Returns 0 if the directory doesn't exist yet.
+ */
+function getDirTotalSize(dirPath: string): number {
+    if (!fs.existsSync(dirPath)) return 0;
+    let total = 0;
+    const entries = fs.readdirSync(dirPath, { withFileTypes: true });
+    for (const entry of entries) {
+        const fullPath = path.join(dirPath, entry.name);
+        if (entry.isDirectory()) {
+            total += getDirTotalSize(fullPath);
+        } else {
+            total += fs.statSync(fullPath).size;
+        }
+    }
+    return total;
+}
+
+/**
+ * Wait for the output directory to exist, contain files, and stabilize
+ * (no size changes for `stableMs` milliseconds).
+ */
+function waitForOutputStable(outputPath: string, stableMs = 2000, timeoutMs = 120000): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+        let lastSize = -1;
+        let stableSince = 0;
+        const start = Date.now();
+
+        const interval = setInterval(() => {
+            const elapsed = Date.now() - start;
+            if (elapsed > timeoutMs) {
+                clearInterval(interval);
+                reject(new Error('Export timed out waiting for output files to stabilize.'));
+                return;
+            }
+
+            const size = getDirTotalSize(outputPath);
+            if (size > 0 && size === lastSize) {
+                if (stableSince === 0) stableSince = Date.now();
+                if (Date.now() - stableSince >= stableMs) {
+                    clearInterval(interval);
+                    resolve();
+                    return;
+                }
+            } else {
+                stableSince = 0;
+            }
+            lastSize = size;
+        }, 500);
+    });
+}
+
+async function resolveSketchOutputBuild(error: proc.ExecException | null, stdout: string, stderr: string)
 {
-    exportEnded = true;
     if (error) {
+        exportEnded = true;
         vscode.window.showErrorMessage(`Export failed: ${stderr || error.message}`);
         return;
     }
     if(stderr && stderr.trim() !== '')
         console.error(stderr);
     console.log(stdout);
-    vscode.window.showInformationMessage('Processing Sketch: Exporting completed!');
+
+    // Processing 4.5+ spawns a separate process for the actual export,
+    // so the launcher exits before files are fully written.
+    // Poll the output directory until files appear and stabilize.
+    try {
+        await waitForOutputStable(currentOutputPath);
+        vscode.window.showInformationMessage('Processing Sketch: Exporting completed!');
+    } catch (e: any) {
+        vscode.window.showErrorMessage(`Export may have failed: ${e.message}`);
+    } finally {
+        exportEnded = true;
+    }
 }
 
 

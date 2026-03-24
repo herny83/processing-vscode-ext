@@ -206,6 +206,9 @@ async function exportSketch(uri?: vscode.Uri)
 		const validProcessing = validateProcessingPath();
 		if(validSketchPath && validProcessing)
 		{
+			if(!currentProcessingVersion)
+				currentProcessingVersion = detectProcessingVersion(currentProcessingPath);
+
 			deploy.exportSketch(currentProcessingPath, sketchPath, outputPath, currentProcessingVersion);
 		}
 		else
@@ -398,6 +401,19 @@ function detectProcessingVersion(processingPath: string): string | undefined
 		return undefined;
 
 	const cleanPath = processingPath.replace(/[\\/]+$/, '');
+	// Try app/.jpackage.xml (Processing 4.5+)
+	const jpackageFile = path.join(cleanPath, 'app', '.jpackage.xml');
+	if (isPathValid(jpackageFile))
+	{
+		try
+		{
+			const xml = fs.readFileSync(jpackageFile, 'utf8');
+			const match = xml.match(/<app-version>([^<]+)<\/app-version>/i);
+			if (match && match[1])
+				return match[1].trim();
+		}
+		catch (e) { /* ignore */ }
+	}
 
 	// Try revision.txt (Processing 4.x includes this)
 	const revisionFile = path.join(cleanPath, 'revision.txt');
