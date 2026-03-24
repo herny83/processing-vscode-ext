@@ -17,10 +17,10 @@ After completing a step:
 
 
 **Date**: March 24, 2026
-**Completed**: 1.3 — Removed debugger's stale vscode-languageclient@6.0.0-next.9, inlined Range conversion
-**Next step**: 1.4 — Clean up unused dependencies
+**Completed**: 1.4 — Cleaned up unused dependencies in server, verified client/debugger clean
+**Next step**: 1.5 — Bundling setup (esbuild)
 **Error count**: 0 (all workspaces compile)
-**Notes**: Removed dependency and converters, replaced with direct mapping, validated all workspaces build cleanly.
+**Notes**: Removed unused server deps, double-checked all workspaces, no further cleanup needed.
 
 ---
 
@@ -30,7 +30,7 @@ After completing a step:
 - [x] **1.1** Commit current structural changes (src/extension.ts, unified package.json, debugger updates) — 2026-03-23: All structural changes committed, tree clean
 - [x] **1.2** Verify extension loads in dev host (LSP + debugger both activate) — 2026-03-23: Extension loads, LSP and debugger activate, type errors resolved
 - [x] **1.3** Remove debugger's stale vscode-languageclient@6.0.0-next.9 (inline Range conversion) — 2026-03-24: Removed dependency, inlined Range conversion, validated build
-- [ ] **1.4** Clean up unused dependencies
+- [x] **1.4** Clean up unused dependencies — 2026-03-24: Removed unused server deps, verified client/debugger clean
 - [ ] **1.5** Bundling setup (esbuild) — moved here from Phase 6 to catch packaging issues early
 
 ## Phase 2: Isolate antlr4ts
