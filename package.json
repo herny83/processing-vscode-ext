@@ -13,6 +13,11 @@
   ],
   "main": "./out/extension.js",
   "contributes": {
+    "breakpoints": [
+      {
+        "language": "processing"
+      }
+    ],
     "javaExtensions": [
       "./debugger/server/com.microsoft.java.debug.plugin-0.53.2.jar"
     ],
