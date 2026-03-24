@@ -31,7 +31,11 @@
         "extensions": [
           ".pde"
         ],
-        "configuration": "./assets/language-configuration.json"
+        "configuration": "./assets/language-configuration.json",
+        "icon": {
+          "light": "./assets/fileicons/images/processing_2021_logo.svg",
+          "dark": "./assets/fileicons/images/processing_2021_logo.svg"
+        }
       }
     ],
     "grammars": [
