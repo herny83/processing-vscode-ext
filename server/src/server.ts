@@ -146,6 +146,19 @@ connection.onNotification('processing/reloadSketch', () => {
     sketch.forceReloadSketch();
 });
 
+// Find PDE references for a symbol name (used by Java files to surface cross-language references)
+connection.onRequest('processing/findPdeReferences', async (params: { symbolName: string, qualifiedClassName?: string }): Promise<Location[]> => {
+	try {
+		if (!sketch.isSketchInitialized())
+			return [];
+		await waitForCodeRebuild();
+		return reference.findPdeReferencesByName(params.symbolName, params.qualifiedClassName);
+	} catch (e) {
+		console.error("[ProcessingLSP] findPdeReferences error:", e);
+		return [];
+	}
+});
+
 // -----------------------------------------------------------------------------------------
 // -----------------------------------------------------------------------------------------
 // -----------------------------------------------------------------------------------------

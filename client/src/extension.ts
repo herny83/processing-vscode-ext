@@ -9,10 +9,16 @@ import {
 	LanguageClientOptions,
 	ServerOptions,
 	TransportKind,
-	WorkDoneProgress
+	WorkDoneProgress,
+	State,
+	ErrorAction,
+	CloseAction,
+	ErrorHandler,
+	Message
 } from 'vscode-languageclient/node';
 
 let client: LanguageClient;
+let outputChannel: vscode.OutputChannel;
 let currentSketchPath: string | undefined;
 let currentProcessingPath: string | undefined;
 let currentProcessingVersion: string | undefined;
@@ -78,10 +84,11 @@ function compareVersions(a: string, b: string): number
 
 export function activate(context: vscode.ExtensionContext)
 {
+	outputChannel = vscode.window.createOutputChannel("Processing Client");
 	console.log("Processing Client activation");
 	let serverModule = context.asAbsolutePath( path.join('server', 'out', 'server.js') );
 	
-	let debugOptions = { execArgv: ['--nolazy', '--inspect=6009'] }; // '--inspect-brk=6009'] };
+	let debugOptions = { execArgv: ['--nolazy', '--inspect=6009'] };
 
 	let serverOptions: ServerOptions = {
 		run: { module: serverModule, transport: TransportKind.ipc },
@@ -113,10 +120,33 @@ export function activate(context: vscode.ExtensionContext)
 			processingPath: currentProcessingPath,
 			processingVersion: currentProcessingVersion,
 		},
-		synchronize: {}
+		synchronize: {},
+		errorHandler: {
+			error(error: Error, message: Message | undefined, count: number | undefined): { action: ErrorAction } {
+				outputChannel.appendLine(`[Error] Server error (count: ${count}): ${error.message}`);
+				if (message)
+					outputChannel.appendLine(`[Error] Message: ${JSON.stringify(message)}`);
+				if (count && count >= 5) {
+					vscode.window.showErrorMessage('Processing Language Server crashed repeatedly. Check "Processing Client" output for details.');
+					return { action: ErrorAction.Shutdown };
+				}
+				return { action: ErrorAction.Continue };
+			},
+			closed(): { action: CloseAction } {
+				outputChannel.appendLine(`[Error] Server connection closed unexpectedly`);
+				vscode.window.showWarningMessage('Processing Language Server stopped. Restarting...');
+				return { action: CloseAction.Restart };
+			}
+		}
 	};
 
 	client = new LanguageClient('pdeLanguageServer', 'Processing Language Server', serverOptions, clientOptions);
+
+	client.onDidChangeState((event) => {
+		outputChannel.appendLine(`[State] ${stateToString(event.oldState)} -> ${stateToString(event.newState)}`);
+		if (event.newState === State.Stopped)
+			outputChannel.appendLine(`[Error] Server stopped`);
+	});
 
 	let referenceDisposable = vscode.commands.registerCommand('processing.command.findReferences', (...args: any[]) => {
 		vscode.commands.executeCommand('editor.action.findReferences', vscode.Uri.file(args[0].uri.substring(7,args[0].uri.length)), new vscode.Position(args[0].lineNumber,args[0].column));
@@ -130,6 +160,60 @@ export function activate(context: vscode.ExtensionContext)
 	context.subscriptions.push(exportDisposable);
 
 	client.start();
+
+	// Register a ReferenceProvider for Java files so that "Find References" in .java
+	// also surfaces usages from .pde files (cross-language references).
+	const javaPdeRefProvider = vscode.languages.registerReferenceProvider(
+		{ language: 'java', scheme: 'file' },
+		{
+			async provideReferences(document: vscode.TextDocument, position: vscode.Position, _context: vscode.ReferenceContext, _token: vscode.CancellationToken): Promise<vscode.Location[]>
+			{
+				if (!client || !client.isRunning())
+					return [];
+
+				const wordRange = document.getWordRangeAtPosition(position);
+				if (!wordRange)
+					return [];
+
+				const symbolName = document.getText(wordRange);
+				if (!symbolName)
+					return [];
+
+				// Use the Java extension's definition provider to get the fully qualified class
+				let qualifiedClassName: string | undefined;
+				try {
+					const definitions = await vscode.commands.executeCommand<(vscode.Location | vscode.LocationLink)[]>(
+						'vscode.executeDefinitionProvider', document.uri, position
+					);
+					if (definitions && definitions.length > 0) {
+						const def = definitions[0];
+						const defUri = 'targetUri' in def ? def.targetUri : def.uri;
+						qualifiedClassName = extractQualifiedClassName(defUri);
+					}
+				} catch {
+					// Definition provider not available, continue without class context
+				}
+
+				try {
+					const locations: any[] = await client.sendRequest('processing/findPdeReferences', {
+						symbolName,
+						qualifiedClassName
+					});
+					return locations.map((loc: any) => {
+						const uri = vscode.Uri.parse(loc.uri);
+						const range = new vscode.Range(
+							new vscode.Position(loc.range.start.line, loc.range.start.character),
+							new vscode.Position(loc.range.end.line, loc.range.end.character)
+						);
+						return new vscode.Location(uri, range);
+					});
+				} catch {
+					return [];
+				}
+			}
+		}
+	);
+	context.subscriptions.push(javaPdeRefProvider);
 
 	// Show a progress notification during initial setup
 	vscode.window.withProgress(
@@ -173,7 +257,48 @@ export function activate(context: vscode.ExtensionContext)
 }
 
 
-export function deactivate(): Thenable<void> | undefined 
+function stateToString(state: State): string {
+	switch (state) {
+		case State.Stopped: return 'Stopped';
+		case State.Starting: return 'Starting';
+		case State.Running: return 'Running';
+		default: return `Unknown(${state})`;
+	}
+}
+
+/**
+ * Extracts a fully qualified Java class name from a definition URI.
+ * Handles common formats:
+ *   file:///path/to/src/com/example/ClassA.java      → com.example.ClassA
+ *   jdt://contents/lib.jar/com/example/ClassA.class   → com.example.ClassA
+ */
+function extractQualifiedClassName(uri: vscode.Uri): string | undefined {
+	const uriStr = uri.toString();
+
+	// JDT (Red Hat Java) class file URIs: jdt://contents/lib.jar/com/example/ClassA.class
+	const jdtMatch = uriStr.match(/jdt:\/\/contents\/[^/]+\/(.+)\.class/);
+	if (jdtMatch) {
+		return jdtMatch[1].replace(/\//g, '.').replace(/\$/g, '.');
+	}
+
+	// Regular .java source files: extract from path after common source roots
+	const filePath = uri.fsPath.replace(/\\/g, '/');
+	const sourceRoots = ['/src/main/java/', '/src/test/java/', '/src/'];
+	for (const root of sourceRoots) {
+		const idx = filePath.indexOf(root);
+		if (idx >= 0) {
+			const relative = filePath.substring(idx + root.length);
+			return relative.replace(/\.java$/, '').replace(/\//g, '.');
+		}
+	}
+
+	// Fallback: just use the filename without extension as the class name
+	const fileName = path.basename(uri.fsPath);
+	const match = fileName.match(/^(.+)\.(java|class)$/);
+	return match ? match[1] : undefined;
+}
+
+export function deactivate(): Thenable<void> | undefined
 {
 	console.log("deactivating extension");
 	if (!client)

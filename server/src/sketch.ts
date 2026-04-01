@@ -287,6 +287,11 @@ export class PdeContentInfo implements IDiagnosticReporter
 		return this.usageMap.get(declName);
 	}
 
+	public getUsageMapKeys() : IterableIterator<string>
+	{
+		return this.usageMap.keys();
+	}
+
 	public getImplementationsForQualifiedName( declName : string ) : string[] | undefined
 	{
 		return this.implementations.get(declName);

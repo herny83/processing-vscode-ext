@@ -50,7 +50,7 @@ export async function scheduleLookUpReference(pdeInfo : sketch.PdeContentInfo, l
 		return locations;
 	}
 
-	// If the symbol is a class, interface of enum then me make sure to rename all the constructors too
+	// If the symbol is a class, interface of enum then me make sure to get all the constructors too
 	else if( objectSymbol instanceof psymb.PClassSymbol || 
 		objectSymbol instanceof psymb.PInterfaceSymbol || 
 		objectSymbol instanceof psymb.PEnumSymbol)
@@ -171,6 +171,94 @@ function sortedPush(editLst: Location[], edit : Location)
 	} else {
 		editLst.push(edit);
 	}
+}
+
+/**
+ * Finds PDE references for a symbol identified by name.
+ * Used to surface .pde usages when "Find References" is invoked from a .java file.
+ *
+ * Uses the qualified class name (from the Java definition provider) to look up
+ * the exact symbol in the library/dependency table, then collects PDE references
+ * using the same extractSignature format that built the usageMap keys.
+ */
+export async function findPdeReferencesByName(symbolName : string, qualifiedClassName? : string): Promise<Location[]>
+{
+	let locations : Location [] = [];
+	if(!symbolName)
+		return locations;
+
+	const symbolTable = sketch.getSymbolTable();
+	if(!symbolTable)
+		return locations;
+
+	// Try to resolve the owning class from the dependency table
+	let ownerSymbol : symb.BaseSymbol | undefined;
+	if(qualifiedClassName)
+		ownerSymbol = symbolTable.dependencyTable.resolveComponent(psymb.PComponentSymbol, qualifiedClassName);
+
+	// Fallback: try the main class (for sketch-defined symbols)
+	if(!ownerSymbol)
+	{
+		let mainClass = sketch.getMainClass();
+		if(mainClass)
+			ownerSymbol = psymb.PUtils.resolveSymbolSync(mainClass, symb.BaseSymbol, symbolName);
+
+		// If we found the symbol directly in the main class, use the same branching as scheduleLookUpReference
+		if(ownerSymbol)
+		{
+			if(ownerSymbol instanceof psymb.PMethodSymbol)
+			{
+				if(ownerSymbol.returnType == undefined)
+				{
+					let declName = psymb.PUtils.extractSignature(ownerSymbol);
+					await collectReferencesForDeclarationName(declName, locations);
+				}
+				else
+					collectReferencesForMethod(ownerSymbol, locations);
+				return locations;
+			}
+			else if(ownerSymbol instanceof psymb.PClassSymbol ||
+				ownerSymbol instanceof psymb.PInterfaceSymbol ||
+				ownerSymbol instanceof psymb.PEnumSymbol)
+			{
+				let candidates = psymb.PUtils.getAllSymbolsSync(ownerSymbol, psymb.PMethodSymbol, ownerSymbol.name, true);
+				for(let candidate of candidates)
+				{
+					if(candidate !== undefined)
+						await collectReferencesForDeclarationName(psymb.PUtils.extractSignature(candidate), locations);
+				}
+				await collectReferencesForDeclarationName(psymb.PUtils.extractSignature(ownerSymbol), locations);
+				return locations;
+			}
+
+			let declName = psymb.PUtils.extractSignature(ownerSymbol);
+			await collectReferencesForDeclarationName(declName, locations);
+			return locations;
+		}
+		return locations;
+	}
+
+	// Owner class found in dependency table — find the member symbol(s)
+	if(ownerSymbol instanceof symb.ScopedSymbol)
+	{
+		// If symbolName matches the class itself (e.g. finding references to the class name)
+		if(psymb.PUtils.compareSymbolName(ownerSymbol, symbolName))
+		{
+			let declName = psymb.PUtils.extractSignature(ownerSymbol);
+			await collectReferencesForDeclarationName(declName, locations);
+			return locations;
+		}
+
+		// Find all members with matching name (handles overloads — returns refs for all of them)
+		let members = psymb.PUtils.getAllSymbolsSync(ownerSymbol, symb.BaseSymbol, symbolName, true);
+		for(let member of members)
+		{
+			let declName = psymb.PUtils.extractSignature(member);
+			await collectReferencesForDeclarationName(declName, locations);
+		}
+	}
+
+	return locations;
 }
 
 export class ReferencesVisitor extends ast.AbstractParseTreeVisitor<Range[]> implements ProcessingParserVisitor<Range[]>
