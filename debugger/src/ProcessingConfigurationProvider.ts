@@ -245,7 +245,9 @@ export class ProcessingDebugConfigurationProvider implements vscode.DebugConfigu
 					config.vmArgs = "";
 				}
 				if (config.vmArgs.search("-Djava.library.path") < 0) {
-					const libPath = sketch.getProcessingJavaLibraries();
+					// Remove trailing path separator to avoid "path\" where \" is
+					// interpreted as an escaped quote by the Java argfile parser.
+					const libPath = sketch.getProcessingJavaLibraries().replace(/[\\/]+$/, "");
 					config.vmArgs += ` "-Djava.library.path=${libPath}"`;
 				}
 				// If the user doesn't specify 'console' in launch.json, use the global setting to get the launch console.
