@@ -6,6 +6,7 @@ const root = process.cwd();
 
 const builds = [
 	{
+		// Main extension bundle (includes client + debugger code)
 		entry: join(root, 'src/extension.ts'),
 		outfile: join(root, 'out/extension.js'),
 		platform: 'node',
@@ -15,28 +16,11 @@ const builds = [
 		sourcemap: true
 	},
 	{
-		entry: join(root, 'client/src/extension.ts'),
-		outfile: join(root, 'client/out/extension.js'),
-		platform: 'node',
-		external: ['vscode'],
-		format: 'cjs',
-		bundle: true,
-		sourcemap: true
-	},
-	{
+		// Language server runs in a separate process — needs its own bundle
 		entry: join(root, 'server/src/server.ts'),
 		outfile: join(root, 'server/out/server.js'),
 		platform: 'node',
-		external: ['vscode'],
-		format: 'cjs',
-		bundle: true,
-		sourcemap: true
-	},
-	{
-		entry: join(root, 'debugger/src/extension.ts'),
-		outfile: join(root, 'debugger/out/extension.js'),
-		platform: 'node',
-		external: ['vscode'],
+		external: [],
 		format: 'cjs',
 		bundle: true,
 		sourcemap: true

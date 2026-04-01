@@ -248,6 +248,7 @@
     "onDebug"
   ],
   "scripts": {
+    "vscode:prepublish": "npm run build:bundle",
     "build:client": "tsc -p client",
     "build:server": "tsc -p server",
     "build:debugger": "tsc -p debugger",

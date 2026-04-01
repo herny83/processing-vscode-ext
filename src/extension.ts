@@ -1,18 +1,15 @@
 import * as vscode from 'vscode';
-
-let clientModule: any;
-let debuggerModule: any;
+import * as clientModule from '../client/src/extension';
+import * as debuggerModule from '../debugger/src/extension';
 
 export async function activate(context: vscode.ExtensionContext)
 {
 	// Activate the language client (language server, auto-detect, export)
-	clientModule = require('../client/out/extension');
 	await clientModule.activate(context);
 
 	// Activate the debugger (debug providers, run/debug commands, code lens)
 	try
 	{
-		debuggerModule = require('../debugger/out/extension');
 		await debuggerModule.activate(context);
 	}
 	catch (err)

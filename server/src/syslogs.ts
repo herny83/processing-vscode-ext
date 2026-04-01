@@ -1,5 +1,11 @@
-const exec = require('child_process').exec
-const logPath = `${__dirname.substring(0, __dirname.length - 8)}/logs/syslogs.log`
+import * as fs from 'fs';
+import * as path from 'path';
+
+// Resolve log path relative to the extension root (two levels up from server/out/)
+const extensionRoot = path.resolve(__dirname, '..', '..');
+const logDir = path.join(extensionRoot, 'logs');
+const logPath = path.join(logDir, 'syslogs.log');
+
 export enum severity {
 	NONE,
 	INFO,
@@ -14,9 +20,20 @@ type errorWithMessage = {
 	message: string
 }
 
+function ensureLogDir() {
+	if (!fs.existsSync(logDir)) {
+		fs.mkdirSync(logDir, { recursive: true });
+	}
+}
+
 export async function writeLog(logContents: String) {
-    let datetime = new Date()
-    exec(`echo \"${datetime.toISOString().slice(0,22)} -> ${logContents}\" >> ${__dirname.substring(0,__dirname.length-8)}/logs/syslogs.txt`)
+	let datetime = new Date()
+	try {
+		ensureLogDir();
+		fs.appendFileSync(logPath, `${datetime.toISOString().slice(0,22)} -> ${logContents}\n`)
+	} catch {
+		// Silently ignore file write errors
+	}
 }
 
 export async function write(message: string | unknown, logLevel : severity = severity.NONE) {
@@ -29,7 +46,7 @@ export async function write(message: string | unknown, logLevel : severity = sev
 	else {
 		_message = getErrorMessage(message)
 	}
-	
+
 	let logLevelString = ''
 	let logEntry = ''
 	if (logLevel > 0) {
@@ -39,15 +56,13 @@ export async function write(message: string | unknown, logLevel : severity = sev
 	else {
 		logEntry = `${datetime} - ${_message}`
 	}
-	
-	if(process.platform === 'win32') {
-		logEntry = logEntry.replace(/>/g, '^>')
-	}
-	else {
-		logEntry = logEntry.replace(/>/g, '\>')
-	}
 
-	exec(`echo ${logEntry} >> ${logPath}`)
+	try {
+		ensureLogDir();
+		fs.appendFileSync(logPath, logEntry + '\n');
+	} catch {
+		// Silently ignore file write errors
+	}
 
 	if (logLevel == 3 || logLevel == 4 ) {
 		console.log(`${logEntry}`)
@@ -70,10 +85,10 @@ function severityToString(logLevel : severity) : string {
 
 		case severity.BEHAVIOR:
 			return "BEHAVOIR"
-		
+
 		case severity.EVENT:
 			return "EVENT"
-		
+
 		case severity.SUCCES:
 			return "SUCCES"
 

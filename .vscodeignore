@@ -1,11 +1,15 @@
-# Source files (compiled to out/)
+# Source files (bundled by esbuild)
 src/
-client/src/
+client/
 server/src/
+server/out/**
+!server/out/server.js
 debugger/src/
 shared/src/
+shared/out/
+debugger/out/
 
-# Grammar source (generated files are in server/src/grammer/)
+# Grammar source
 server/grammar/
 
 # Config and tooling
@@ -16,8 +20,6 @@ scripts/
 test/
 tsconfig*.json
 **/tsconfig.json
-**/*.ts
-!**/*.d.ts
 
 # Development files
 .gitignore
@@ -26,15 +28,13 @@ tsconfig*.json
 CODE_STYLE.md
 CONTRIBUTING.md
 SECURITY.md
+esbuild.mjs
+
+# All node_modules excluded (dependencies are bundled)
+**/node_modules/
 
 # Misc
 **/.vscode-test/
-**/node_modules/
-node_modules/
-client/node_modules/
-server/node_modules/
-debugger/node_modules/
-shared/node_modules/
 **/*.map
 
 # Root build/package artifacts

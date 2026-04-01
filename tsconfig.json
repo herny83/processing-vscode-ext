@@ -5,10 +5,10 @@
         "moduleResolution": "node",
         "sourceMap": true,
         "outDir": "out",
-        "rootDir": "src",
         "esModuleInterop": true,
-        "skipLibCheck": true
+        "skipLibCheck": true,
+        "noEmit": true
     },
-    "include": ["src"],
+    "include": ["src", "client/src", "debugger/src"],
     "exclude": ["node_modules", "out"]
 }
