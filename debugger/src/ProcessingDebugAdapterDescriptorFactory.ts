@@ -23,7 +23,7 @@ export class ProcessingDebugAdapterDescriptorFactory implements vscode.DebugAdap
                 console.log("Cannot find a port for debugging session");
             }
         } catch (err) {
-            error = err;
+            error = err instanceof Error ? err : new Error(String(err));
         }
 
         const message = error ? convertErrorToMessage(error) : {

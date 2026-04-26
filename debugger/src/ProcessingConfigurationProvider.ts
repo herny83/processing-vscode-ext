@@ -86,7 +86,7 @@ export class ProcessingDebugConfigurationProvider implements vscode.DebugConfigu
 			this.mergePlatformProperties(config, folder);
 			return this.resolveAndValidateDebugConfiguration(folder, config, token);
 		} catch (ex) {
-			vscode.window.showErrorMessage(String((ex && ex.message) || ex));
+			vscode.window.showErrorMessage(String(ex instanceof Error ? ex.message : ex));
 			return undefined;
 		}
 	}
@@ -401,7 +401,7 @@ export class ProcessingDebugConfigurationProvider implements vscode.DebugConfigu
 			} else if (ex instanceof utility.UserError) {
 				utility.showErrorMessageWithTroubleshooting(ex.context);
 			} else {
-				const errorMsg = utility.convertErrorToMessage(ex);
+				const errorMsg = utility.convertErrorToMessage(ex instanceof Error ? ex : new Error(String(ex)));
 				vscode.window.showErrorMessage(`Processing Debug Failed: ${errorMsg.message}`);
 			}
 

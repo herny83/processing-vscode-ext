@@ -49,7 +49,7 @@ function convertToJavaProcess(pid: number, command: string, args: string): IJava
 export async function pickJavaProcess(): Promise<IJavaProcess | undefined> {
     const javaProcesses: IJavaProcess[] = [];
     try {
-        await getProcesses((pid: number, _ppid: number, command: string, args: string, _date: number) => {
+        await getProcesses((pid: number, _ppid: number, command: string, args: string, _date?: number) => {
             const javaProcess = convertToJavaProcess(pid, command, args);
             if (javaProcess) {
                 javaProcesses.push(javaProcess);

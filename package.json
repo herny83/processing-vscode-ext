@@ -2,7 +2,7 @@
   "name": "processing",
   "displayName": "Processing Language & Debugger",
   "description": "Unified VS Code extension for Processing language support and debugging.",
-  "version": "0.0.1",
+  "version": "0.0.11",
   "publisher": "herny83",
   "engines": {
     "vscode": ">=1.80.0"

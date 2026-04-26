@@ -13,9 +13,9 @@ class ProgressReporter implements IProgressReporter {
     private _progressLocation: ProgressLocation | { viewId: string };
     private _cancellable: boolean = false;
 
-    private _message: string;
+    private _message: string = "";
     private _increment: number | undefined;
-    private _isShown: boolean;
+    private _isShown: boolean = false;
 
     private _tokenSource = new CancellationTokenSource();
     private _statusBarItem: StatusBarItem | undefined;

@@ -5,7 +5,7 @@ import * as vscode from "vscode";
 
 export class NotificationBar implements vscode.Disposable {
     private statusBar: vscode.StatusBarItem;
-    private lastUpdateTime: number;
+    private lastUpdateTime: number = 0;
 
     constructor(id: string, name: string) {
         this.statusBar = vscode.window.createStatusBarItem(id, vscode.StatusBarAlignment.Left, 1);

@@ -332,9 +332,9 @@ async function exportSketch(uri?: vscode.Uri)
 		if(validSketchPath && validProcessing)
 		{
 			if(!currentProcessingVersion)
-				currentProcessingVersion = detectProcessingVersion(currentProcessingPath);
+				currentProcessingVersion = detectProcessingVersion(currentProcessingPath!);
 
-			deploy.exportSketch(currentProcessingPath, sketchPath, outputPath, currentProcessingVersion);
+			deploy.exportSketch(currentProcessingPath!, sketchPath, outputPath, currentProcessingVersion);
 		}
 		else
 		{

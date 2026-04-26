@@ -250,7 +250,7 @@ export async function searchMainMethodsWithProgress(uri?: vscode.Uri): Promise<I
                 return resolveMainClass(uri);
             });
     } catch (ex) {
-        vscode.window.showErrorMessage(String((ex && ex.message) || ex));
+        vscode.window.showErrorMessage(String(ex instanceof Error ? ex.message : ex));
         throw ex;
     }
 }

@@ -7,13 +7,10 @@
         "rootDir": "src",
         "outDir": "out",
         "sourceMap": true,
+        "strict": true,
         "noUnusedLocals": true,
-        "noImplicitThis": true,
-        "noImplicitAny": true,
-        "noImplicitReturns": true,
         "noUnusedParameters": true,
-        "strictNullChecks": true,
-        "alwaysStrict": true
+        "noImplicitReturns": true
     },
     "include": [
 		"src"
