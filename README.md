@@ -1,6 +1,6 @@
 # Processing VS Code Extension (processing-ext)
 
-Unified VS Code extension for Processing language support, combining all features from previous language (LSP) and debugging extensions in one package.
+Un-Official VS Code extension for Processing language support, trying to implement all possible features regarding LSP & debugging.
 
 ## Features
 
