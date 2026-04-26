@@ -15,13 +15,16 @@ After completing a step:
 
 ## Last Session
 
+**Date**: April 26, 2026
+**Completed** (interim infrastructure cleanups, not numbered phase work):
+- Module-resolution migration `node` → `bundler` and `commonjs` → `esnext` across all 6 tsconfigs; fixed `this`-binding crashes in `references.ts`/`rename.ts`; removed dead `program` field from debuggers contribution (d7f76f7)
+- Enabled `strict: true` on `client` + `debugger` tsconfigs after fixing 10 strict-mode errors (ed4f717)
+- Added Copilot tooling: `code-reviewer` agent + `review-changes`/`wrap-up` prompts (a91aad1, d45fe97)
+- Expanded Phase 2 in PLAN.md with 4-track structure (isolation + strict cleanup, parallelized)
 
-
-**Date**: March 24, 2026
-**Completed**: 1.5 — Bundling setup (esbuild), validated .vsix size and output
 **Next step**: 2.1 — Create antlr4ts shim (server/src/antlr-types.ts)
-**Error count**: 0 (all workspaces compile)
-**Notes**: Bundling with esbuild set up, all entry points bundle, .vsix size 4.36MB, ready for antlr4ts isolation.
+**Error count**: 0 baseline build; 143 strict-mode errors remaining (all in server: 106 top-level + 37 in antlr-sym/)
+**Notes**: Client + debugger workspaces now strict-clean. Server is the entire remaining strict backlog. Phase 2 Tracks A and B are parallelizable on disjoint file sets.
 
 ---
 
@@ -34,13 +37,38 @@ After completing a step:
 - [x] **1.4** Clean up unused dependencies — 2026-03-24: Removed unused server deps, verified client/debugger clean
 - [x] **1.5** Bundling setup (esbuild) — 2026-03-24: Bundling with esbuild set up, all entry points bundle, .vsix size 4.36MB
 
-## Phase 2: Isolate antlr4ts
+## Interim: Infrastructure cleanups (post-1.5, pre-2.1)
+
+Work that came up between Phase 1 completion and starting Phase 2. Not part of any numbered phase but material to the v1 publish track.
+
+- [x] **Module-resolution migration** — 2026-04-26 (d7f76f7): `moduleResolution: node` → `bundler` and `module: commonjs` → `esnext` across all 6 tsconfigs. Fixed `this`-binding crashes in `scheduleLookUpReference`/`scheduleLookUpRename`. Removed dead `program` field from `debuggers` contribution.
+- [x] **Strict mode on client + debugger** — 2026-04-26 (ed4f717): Fixed 10 strict-mode errors (2 client + 8 debugger). Enabled `"strict": true` in both tsconfigs.
+- [x] **Copilot review + wrap-up tooling** — 2026-04-26 (a91aad1, d45fe97): Added `code-reviewer` agent (pinned `model: GPT-4.1`, namespaced tools, behavioral rules over "be thorough" framing), plus `review-changes` and `wrap-up` slash-command wrappers. Wrap-up enforces file-by-file `git add`.
+- [x] **Phase 2 plan expansion** — 2026-04-26: Restructured PLAN.md Phase 2 with 4 tracks (A: isolation + consumer strict, B: antlr-sym strict, C: remaining server strict, D: lock-in). Added 2.6, 2.7, 2.8.
+
+## Phase 2: Isolate antlr4ts and Tighten Server Type-Safety
+
+> Four tracks. A + B run in parallel (disjoint file sets). C waits for A + B. D is the lock-in gate. See [PLAN.md](PLAN.md) for full per-step detail.
+
+### Track A: Isolation + consumer-file strict cleanup
 
 - [ ] **2.1** Create antlr4ts shim (server/src/antlr-types.ts)
-- [ ] **2.2** Update LIGHT consumer files (7 files: lens, DocumentSymbols, definition, hover, rename, references, sketch)
-- [ ] **2.3** Update MEDIUM consumer files (astutils, completion)
-- [ ] **2.4** Update CRITICAL consumer files (symbols, definitionsMap, parser, ProcessingErrorListener)
-- [ ] **2.5** Verify no direct antlr4ts imports remain outside shim + generated grammar
+- [ ] **2.2** Update LIGHT consumer files (7 files: lens, DocumentSymbols, definition, hover, rename, references, sketch) — combined import swap + strict fix per file
+- [ ] **2.3** Update MEDIUM consumer files (astutils, completion) — combined per-file batching
+- [ ] **2.4** Update CRITICAL consumer files (symbols, definitionsMap, parser, ProcessingErrorListener) — combined per-file batching
+- [ ] **2.5** Verify no direct antlr4ts imports remain outside shim + generated grammar; LSP smoke test
+
+### Track B: `server/src/antlr-sym/` strict cleanup (parallel with A)
+
+- [ ] **2.6** Eliminate ~37 strict-mode errors in P-prefixed symbol wrappers (start with PType.ts, then PUtils.ts, then the rest)
+
+### Track C: Remaining `server/src/` strict cleanup
+
+- [ ] **2.7** Eliminate strict-mode errors in top-level server files not covered by 2.2–2.4 (server.ts, javaModules.ts, javaClassVisitor.ts, etc.)
+
+### Track D: Lock-in
+
+- [ ] **2.8** Enable `"strict": true` in server/tsconfig.json + full validation gate (build + bundle + dev-host smoke test)
 
 ## Phase 3: Processing v4.0+
 

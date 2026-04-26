@@ -122,12 +122,27 @@ Set up bundling early to catch packaging issues before they compound.
 
 ---
 
-## Phase 2: Isolate antlr4ts (Reduce Dependency Surface)
+## Phase 2: Isolate antlr4ts and Tighten Server Type-Safety
 
-**Goal**: Centralize all `antlr4ts` imports behind a single shim file. This doesn't remove antlr4ts yet, but isolates it so that a future full migration (parser regeneration + API swap) only needs to change one file. **Zero runtime risk.**
+**Goal**: Two outcomes, executed in parallel tracks:
+1. Centralize all `antlr4ts` imports behind a single shim file so a future migration (parser regeneration + API swap) is a one-file change.
+2. Eliminate the server's strict-mode error backlog (~143 errors) and enable `"strict": true` on `server/tsconfig.json`.
 
-> **Why not full removal?** Full removal requires regenerating the ANTLR parser (risky, needs Java tooling setup)
+**Risk profile**: Import swap = zero runtime risk (mechanical). Strict-mode fixes = small per-file runtime risk, caught by build + smoke test.
+
+> **Why not full antlr4ts removal?** Full removal requires regenerating the ANTLR parser (risky, needs Java tooling setup)
 > and rewriting visitor base classes. That's a v2 task. This phase does the safe mechanical part only.
+
+### Track structure
+
+This phase has four parallel/sequential tracks:
+
+| Track | Steps | Files | Parallelizable with |
+|---|---|---|---|
+| **A. Isolation + consumer strict cleanup** | 2.1–2.5 | 13 consumer files in `server/src/` top-level | Track B |
+| **B. antlr-sym strict cleanup** | 2.6 | 12 files in `server/src/antlr-sym/` (~37 errors) | Track A (disjoint file set, no merge risk) |
+| **C. Remaining server strict cleanup** | 2.7 | `server.ts`, javaModules, etc. — top-level files **not** in Track A | After A + B |
+| **D. Lock-in** | 2.8 | `server/tsconfig.json` only | After A + B + C |
 
 ### 2.1 Create antlr4ts shim
 
@@ -161,6 +176,16 @@ export { ANTLRErrorListener, RecognitionException, Recognizer } from 'antlr4ts';
 ### 2.2 Update LIGHT consumer files
 
 These files use antlr4ts types only for annotations, `instanceof` checks, or simple property access. Updating them is mechanical: change the import path, nothing else.
+
+> **Combined per-file batching rule (applies to 2.2, 2.3, and 2.4):**
+> For each file visited, in the same commit:
+> 1. Swap `antlr4ts` imports → `./antlr-types`.
+> 2. Fix that file's strict-mode errors: `npx tsc -p server --noEmit --strict 2>&1 | grep <filename>`.
+> 3. Delete dead branches that strict narrowing reveals (we hit one in `references.ts` already during prior work — keep an eye out).
+> 4. Verify file is strict-clean before moving on.
+>
+> If a single combined commit per file gets too noisy (mainly for `definitionsMap.ts` and `symbols.ts`),
+> split into two commits per file (import swap, then strict fix) — but **same PR/branch** so they're reviewed as a pair.
 
 **Files** (process in this order):
 1. `server/src/lens.ts` — remove commented-out import entirely
@@ -222,6 +247,72 @@ grep -rn "from 'antlr4ts" server/src/ --include="*.ts" | grep -v "grammer/" | gr
 Should return 0 results (only `antlr-types.ts` and generated grammar files import from antlr4ts directly).
 
 **Also verify:** Extension loads, LSP features work (completion, hover, goto def — quick smoke test).
+
+---
+
+### 2.6 Track B: Strict-mode cleanup of `server/src/antlr-sym/`
+
+**Goal**: Eliminate the ~37 strict-mode errors in the P-prefixed symbol wrappers.
+
+**Why parallel with 2.2–2.4**: antlr-sym files import only from `antlr4-c3`, never from `antlr4ts` directly (verified by grep). They're a disjoint file set from the Phase 2 consumer files, so this track can run on a separate branch concurrently with no merge risk.
+
+**Files** (12 total in `server/src/antlr-sym/src/`):
+
+Largest first (most errors):
+- `PType.ts` — uninitialized properties (`name`, `genericTypes`, `implementTypes`, `typeKind`, `reference`, `arrayType`), function-lacks-ending-return, nullability
+- `PUtils.ts` — nullability cascading from PType, type narrowing through `getAllSymbolsSync`/`resolveSymbolSync`
+
+Mid-size (a handful each):
+- `PClassSymbol.ts`, `PInterfaceSymbol.ts` — `implementTypes` typed as `never[]` in base `PComponentSymbol` (fix the base type)
+- `PEnumMemberSymbol.ts` — `PType | undefined` not assignable to `PType`
+- `PMethodSymbol.ts` — `methodFlags` not initialized
+- `PLibraryTable.ts` — `savedParent` possibly undefined
+
+Smaller (likely 0–1 errors after the above are fixed):
+- `PNamespaceSymbol.ts`, `PSymbolTable.ts`, `PThrowsSymbol.ts`, `PGenericParamSymbol.ts`, `PTypedSymbol.ts`, `PComponentSymbol.ts`
+
+**Approach**: Start with `PType.ts` (most errors, foundational — many cascade upward). Then `PUtils.ts`. Then the rest.
+
+**Validation**: `npx tsc -p server --noEmit --strict 2>&1 | grep "antlr-sym"` → 0 errors.
+
+---
+
+### 2.7 Track C: Strict-mode cleanup of remaining `server/src/` files
+
+**Goal**: Eliminate strict-mode errors in `server/src/` top-level files **not** covered by Phase 2.2–2.4 (e.g., `server.ts`, `javaModules.ts`, `javaClassVisitor.ts`, etc.).
+
+**Approach**:
+
+1. List remaining errors:
+   ```bash
+   npx tsc -p server --noEmit --strict 2>&1 | grep "error TS" | grep -v "antlr-sym/"
+   ```
+2. Filter out files already covered by 2.2–2.4 (those should already be 0 — confirm).
+3. Categorize remaining errors by file. Tackle largest file first.
+4. Apply the same per-file rule as 2.2–2.4: read → fix → verify single-file clean → next.
+
+**Validation**: `npx tsc -p server --noEmit --strict` → 0 errors total.
+
+---
+
+### 2.8 Track D: Lock in `strict: true` on `server/tsconfig.json`
+
+**Goal**: Strict mode enabled and enforced going forward, preventing strict-class regressions.
+
+**Action**: In `server/tsconfig.json`, add to `compilerOptions`:
+
+```json
+"strict": true
+```
+
+**Validation**:
+- `npm run build:server` → 0 errors
+- `npm run build` → all 5 tsc projects pass
+- `npm run build:bundle` → both bundles produce successfully (`out/extension.js`, `server/out/server.js`)
+- Extension loads in dev host (F5)
+- LSP smoke test: open a `.pde`, verify diagnostics, completion, hover, goto-def, find-references still work
+
+**Result**: Server is strict-clean, the `antlr4ts` surface is one file, and any future antlr4 migration becomes a true one-file change.
 
 ---
 
