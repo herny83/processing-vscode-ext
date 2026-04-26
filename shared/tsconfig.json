@@ -3,7 +3,7 @@
   "compilerOptions": {
     "outDir": "out",
     "rootDir": "src",
-    "module": "commonjs",
+    "module": "esnext",
     "target": "es2020",
     "lib": ["es2020"],
     "declaration": true,

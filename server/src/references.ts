@@ -65,12 +65,9 @@ export async function scheduleLookUpReference(pdeInfo : sketch.PdeContentInfo, l
 				collectReferencesForDeclarationName(qualifiedName, locations);
 			}
 			else
-				this.pdeInfo?.notifyDiagnostic(`Unable to find candidate reference symbol for ${objectSymbol.name}`, this.pdeInfo.node);
+				pdeInfo.notifyDiagnostic(`Unable to find candidate reference symbol for ${objectSymbol.name}`, parseNode);
 		}
-		if(objectSymbol !== undefined)
-			focusedDeclFullName = psymb.PUtils.extractSignature( objectSymbol );
-		else
-			this.pdeInfo?.notifyDiagnostic(`Unable to find symbol reference XXX for ${objectSymbol.name}`, this.pdeInfo.node);
+		focusedDeclFullName = psymb.PUtils.extractSignature( objectSymbol );
 	}
 	else
 		focusedDeclFullName = pdeInfo.findNodeSymbolDefinitionName(parseNode);

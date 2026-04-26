@@ -59,7 +59,7 @@ export async function scheduleLookUpRename(pdeInfo : sketch.PdeContentInfo, line
 				reference.collectReferencesForDeclarationName(qualifiedName, locations, false);
 			}
 			else
-				this.pdeInfo?.notifyDiagnostic(`Unable to find declaration for ${objectSymbol.name}`, this.pdeInfo.node);
+				pdeInfo.notifyDiagnostic(`Unable to find declaration for ${objectSymbol.name}`, parseNode);
 		}
 		focusedDeclFullName = psymb.PUtils.extractSignature( objectSymbol );
 	}

@@ -2,8 +2,8 @@
     "compilerOptions": {
         "target": "es6",
         "esModuleInterop": true,
-        "module": "commonjs",
-        "moduleResolution": "node",
+        "module": "esnext",
+        "moduleResolution": "bundler",
         "sourceMap": true,
         "outDir": "out",
         "rootDir": "src"
