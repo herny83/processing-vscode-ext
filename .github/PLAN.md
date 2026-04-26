@@ -122,62 +122,9 @@ Set up bundling early to catch packaging issues before they compound.
 
 ---
 
-## Phase 2: Isolate antlr4ts and Tighten Server Type-Safety
-
-**Goal**: Two outcomes, executed in parallel tracks:
-1. Centralize all `antlr4ts` imports behind a single shim file so a future migration (parser regeneration + API swap) is a one-file change.
-2. Eliminate the server's strict-mode error backlog (~143 errors) and enable `"strict": true` on `server/tsconfig.json`.
-
-**Risk profile**: Import swap = zero runtime risk (mechanical). Strict-mode fixes = small per-file runtime risk, caught by build + smoke test.
-
-> **Why not full antlr4ts removal?** Full removal requires regenerating the ANTLR parser (risky, needs Java tooling setup)
 > and rewriting visitor base classes. That's a v2 task. This phase does the safe mechanical part only.
-
-### Track structure
-
-This phase has four parallel/sequential tracks:
-
-| Track | Steps | Files | Parallelizable with |
-|---|---|---|---|
-| **A. Isolation + consumer strict cleanup** | 2.1–2.5 | 13 consumer files in `server/src/` top-level | Track B |
-| **B. antlr-sym strict cleanup** | 2.6 | 12 files in `server/src/antlr-sym/` (~37 errors) | Track A (disjoint file set, no merge risk) |
-| **C. Remaining server strict cleanup** | 2.7 | `server.ts`, javaModules, etc. — top-level files **not** in Track A | After A + B |
-| **D. Lock-in** | 2.8 | `server/tsconfig.json` only | After A + B + C |
-
-### 2.1 Create antlr4ts shim
-
-**Create:** `server/src/antlr-types.ts`
-
-This file is the **single point of contact** between the codebase and antlr4ts. All consumer files will import from here instead of from `antlr4ts` directly.
-
-**Contents** — re-export every type used across the 13 consumer files:
-
-```typescript
-// server/src/antlr-types.ts
-// Centralized re-exports from antlr4ts.
-// When migrating to antlr4 JS runtime, only this file needs to change.
-
-export { ParserRuleContext, CommonTokenStream, Token, CharStreams, BailErrorStrategy } from 'antlr4ts';
-export { PredictionMode } from 'antlr4ts/atn';
-export { ParseTree, TerminalNode, AbstractParseTreeVisitor, ErrorNode } from 'antlr4ts/tree';
-export type { ParseTreeListener } from 'antlr4ts/tree/ParseTreeListener';
-export type { ParseTreeVisitor } from 'antlr4ts/tree/ParseTreeVisitor';
-export { ANTLRErrorListener, RecognitionException, Recognizer } from 'antlr4ts';
-```
-
-> **Note:** Verify the exact list by running:
 > `grep -rn "from 'antlr4ts" server/src/ --include="*.ts" | grep -v grammer/ | grep -v node_modules`
 > and collecting all unique imports.
-
-**Validation:** `npx tsc -p server/tsconfig.json --noEmit` → 0 errors (shim just re-exports, nothing breaks).
-
----
-
-### 2.2 Update LIGHT consumer files
-
-These files use antlr4ts types only for annotations, `instanceof` checks, or simple property access. Updating them is mechanical: change the import path, nothing else.
-
-> **Combined per-file batching rule (applies to 2.2, 2.3, and 2.4):**
 > For each file visited, in the same commit:
 > 1. Swap `antlr4ts` imports → `./antlr-types`.
 > 2. Fix that file's strict-mode errors: `npx tsc -p server --noEmit --strict 2>&1 | grep <filename>`.
@@ -187,117 +134,38 @@ These files use antlr4ts types only for annotations, `instanceof` checks, or sim
 > If a single combined commit per file gets too noisy (mainly for `definitionsMap.ts` and `symbols.ts`),
 > split into two commits per file (import swap, then strict fix) — but **same PR/branch** so they're reviewed as a pair.
 
-**Files** (process in this order):
-1. `server/src/lens.ts` — remove commented-out import entirely
-2. `server/src/DocumentSymbols.ts` — `ParserRuleContext`, `Token`, `ParseTree`
-3. `server/src/definition.ts` — `import * as ast from 'antlr4ts/tree'` → named imports from `./antlr-types`
-4. `server/src/hover.ts` — `import * as ast from 'antlr4ts/tree'` → named imports from `./antlr-types`
-5. `server/src/rename.ts` — `import * as ast from 'antlr4ts/tree'` → named imports from `./antlr-types`
-6. `server/src/references.ts` — `ParserRuleContext`, `import * as ast` → named imports from `./antlr-types`
-7. `server/src/sketch.ts` — `ParseTree`, `TerminalNode`, `ParserRuleContext`
+## Phase 2: Isolate antlr4-c3 and Tighten Server Type-Safety
 
-**For files using `import * as ast from 'antlr4ts/tree'`**: replace with explicit named imports:
-```typescript
-// Before:
-import * as ast from 'antlr4ts/tree';
-// used as: ast.ParseTree, ast.TerminalNode
+> Four tracks. A + B run in parallel (disjoint file sets). C waits for A + B. D is the lock-in gate. See [PROGRESS.md](PROGRESS.md) for full per-step detail.
 
-// After:
-import { ParseTree, TerminalNode } from './antlr-types';
-```
+### Track A: antlr4-c3 Processing Symbol Wrappers
 
-**Validation after each file:** `npx tsc -p server/tsconfig.json --noEmit 2>&1 | grep "<filename>"` → 0 errors.
+- 2.1.1 Translate BaseSymbol to new antlr-sym PBaseSymbol.ts and update all references
+- 2.1.2 Translate ScopedSymbol to new antlr-sym PScopedSymbol.ts and update all references
+- 2.1.3 Translate SymbolTable to new antlr-sym PSymbolTableBase.ts and update all references
+- 2.1.4 Translate IScopedSymbol to new antlr-sym PIScopedSymbol.ts and update all references
+- 2.1.5 Translate VariableSymbol to new antlr-sym PVariableSymbol.ts and update all references
+- 2.1.6 Translate SymbolConstructor to new antlr-sym PSymbolConstructor.ts and update all references
+- 2.1.7 Translate Type to new antlr-sym PTypeBase.ts and update all references
+- 2.1.8 Translate TypeKind to new antlr-sym PTypeKindBase.ts and update all references
+- 2.1.9 Translate ReferenceKind to new antlr-sym PReferenceKind.ts and update all references
+- 2.1.10 Translate MethodFlags to new antlr-sym PMethodFlags.ts and update all references
+- 2.1.11 Translate Modifier to new antlr-sym PModifier.ts and update all references
+- 2.1.12 Translate INamespaceSymbol to new antlr-sym PINamespaceSymbol.ts and update all references
 
----
+- 2.2 Verify no direct antlr4-c3 imports remain outside antlr-sym/ and generated grammar; LSP smoke test
 
-### 2.3 Update MEDIUM consumer files
+### Track B: `server/src/antlr-sym/` strict cleanup (parallel with A)
 
-These files use antlr4ts types for `instanceof` checks and `Token` property reads. Same mechanical import replacement, but read the file first to confirm no API calls need changing.
+- 2.3 Eliminate ~37 strict-mode errors in P-prefixed symbol wrappers (start with PType.ts, then PUtils.ts, then the rest)
 
-**Files:**
-1. `server/src/astutils.ts` — `ParseTree`, `TerminalNode`, `ParserRuleContext`, `Token` (29 Token property accesses — all go through `.symbol.line`, `.symbol.type`, etc. which are interface properties, not API calls)
-2. `server/src/completion.ts` — `ParserRuleContext`, `Token`, `ParseTree`, `TerminalNode`
+### Track C: Remaining `server/src/` strict cleanup
 
-**Validation:** `npx tsc -p server/tsconfig.json --noEmit` → 0 errors.
+- 2.4 Eliminate strict-mode errors in top-level server files not covered by 2.2–2.3 (server.ts, javaModules.ts, javaClassVisitor.ts, etc.)
 
----
+### Track D: Lock-in
 
-### 2.4 Update CRITICAL consumer files
-
-These files extend antlr4ts classes or implement interfaces. The shim re-exports the same classes, so this is still just an import path change — but verify compilation carefully.
-
-**Files:**
-1. `server/src/symbols.ts` — `extends AbstractParseTreeVisitor<void>` (import from `./antlr-types`)
-2. `server/src/definitionsMap.ts` — `extends AbstractParseTreeVisitor<T>`, uses `ErrorNode`, `TerminalNode`, `Token`
-3. `server/src/parser.ts` — `CharStreams`, `CommonTokenStream`, `BailErrorStrategy`, `PredictionMode`, `ParserRuleContext`, `ParseTree`
-4. `server/src/grammer/ProcessingErrorListener.ts` — `implements ANTLRErrorListener<Token>` (import from `../antlr-types`)
-
-**Validation after each file:** `npx tsc -p server/tsconfig.json --noEmit 2>&1 | grep "<filename>"` → 0 errors.
-
-**Validation after all:** `npx tsc -p server/tsconfig.json --noEmit` → 0 errors total.
-
----
-
-### 2.5 Verify no direct antlr4ts imports remain
-
-```bash
-grep -rn "from 'antlr4ts" server/src/ --include="*.ts" | grep -v "grammer/" | grep -v "antlr-types.ts"
-```
-
-Should return 0 results (only `antlr-types.ts` and generated grammar files import from antlr4ts directly).
-
-**Also verify:** Extension loads, LSP features work (completion, hover, goto def — quick smoke test).
-
----
-
-### 2.6 Track B: Strict-mode cleanup of `server/src/antlr-sym/`
-
-**Goal**: Eliminate the ~37 strict-mode errors in the P-prefixed symbol wrappers.
-
-**Why parallel with 2.2–2.4**: antlr-sym files import only from `antlr4-c3`, never from `antlr4ts` directly (verified by grep). They're a disjoint file set from the Phase 2 consumer files, so this track can run on a separate branch concurrently with no merge risk.
-
-**Files** (12 total in `server/src/antlr-sym/src/`):
-
-Largest first (most errors):
-- `PType.ts` — uninitialized properties (`name`, `genericTypes`, `implementTypes`, `typeKind`, `reference`, `arrayType`), function-lacks-ending-return, nullability
-- `PUtils.ts` — nullability cascading from PType, type narrowing through `getAllSymbolsSync`/`resolveSymbolSync`
-
-Mid-size (a handful each):
-- `PClassSymbol.ts`, `PInterfaceSymbol.ts` — `implementTypes` typed as `never[]` in base `PComponentSymbol` (fix the base type)
-- `PEnumMemberSymbol.ts` — `PType | undefined` not assignable to `PType`
-- `PMethodSymbol.ts` — `methodFlags` not initialized
-- `PLibraryTable.ts` — `savedParent` possibly undefined
-
-Smaller (likely 0–1 errors after the above are fixed):
-- `PNamespaceSymbol.ts`, `PSymbolTable.ts`, `PThrowsSymbol.ts`, `PGenericParamSymbol.ts`, `PTypedSymbol.ts`, `PComponentSymbol.ts`
-
-**Approach**: Start with `PType.ts` (most errors, foundational — many cascade upward). Then `PUtils.ts`. Then the rest.
-
-**Validation**: `npx tsc -p server --noEmit --strict 2>&1 | grep "antlr-sym"` → 0 errors.
-
----
-
-### 2.7 Track C: Strict-mode cleanup of remaining `server/src/` files
-
-**Goal**: Eliminate strict-mode errors in `server/src/` top-level files **not** covered by Phase 2.2–2.4 (e.g., `server.ts`, `javaModules.ts`, `javaClassVisitor.ts`, etc.).
-
-**Approach**:
-
-1. List remaining errors:
-   ```bash
-   npx tsc -p server --noEmit --strict 2>&1 | grep "error TS" | grep -v "antlr-sym/"
-   ```
-2. Filter out files already covered by 2.2–2.4 (those should already be 0 — confirm).
-3. Categorize remaining errors by file. Tackle largest file first.
-4. Apply the same per-file rule as 2.2–2.4: read → fix → verify single-file clean → next.
-
-**Validation**: `npx tsc -p server --noEmit --strict` → 0 errors total.
-
----
-
-### 2.8 Track D: Lock in `strict: true` on `server/tsconfig.json`
-
-**Goal**: Strict mode enabled and enforced going forward, preventing strict-class regressions.
+- 2.5 Enable `"strict": true` in server/tsconfig.json + full validation gate (build + bundle + dev-host smoke test)
 
 **Action**: In `server/tsconfig.json`, add to `compilerOptions`:
 

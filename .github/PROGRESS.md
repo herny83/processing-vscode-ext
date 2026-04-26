@@ -46,29 +46,39 @@ Work that came up between Phase 1 completion and starting Phase 2. Not part of a
 - [x] **Copilot review + wrap-up tooling** — 2026-04-26 (a91aad1, d45fe97): Added `code-reviewer` agent (pinned `model: GPT-4.1`, namespaced tools, behavioral rules over "be thorough" framing), plus `review-changes` and `wrap-up` slash-command wrappers. Wrap-up enforces file-by-file `git add`.
 - [x] **Phase 2 plan expansion** — 2026-04-26: Restructured PLAN.md Phase 2 with 4 tracks (A: isolation + consumer strict, B: antlr-sym strict, C: remaining server strict, D: lock-in). Added 2.6, 2.7, 2.8.
 
-## Phase 2: Isolate antlr4ts and Tighten Server Type-Safety
+
+## Phase 2: Isolate antlr4-c3 and Tighten Server Type-Safety
 
 > Four tracks. A + B run in parallel (disjoint file sets). C waits for A + B. D is the lock-in gate. See [PLAN.md](PLAN.md) for full per-step detail.
 
-### Track A: Isolation + consumer-file strict cleanup
+### Track A: antlr4-c3 Processing Symbol Wrappers
 
-- [ ] **2.1** Create antlr4ts shim (server/src/antlr-types.ts)
-- [ ] **2.2** Update LIGHT consumer files (7 files: lens, DocumentSymbols, definition, hover, rename, references, sketch) — combined import swap + strict fix per file
-- [ ] **2.3** Update MEDIUM consumer files (astutils, completion) — combined per-file batching
-- [ ] **2.4** Update CRITICAL consumer files (symbols, definitionsMap, parser, ProcessingErrorListener) — combined per-file batching
-- [ ] **2.5** Verify no direct antlr4ts imports remain outside shim + generated grammar; LSP smoke test
+- [ ] **2.1.1** Translate BaseSymbol to new antlr-sym PBaseSymbol.ts and update all references
+- [ ] **2.1.2** Translate ScopedSymbol to new antlr-sym PScopedSymbol.ts and update all references
+- [ ] **2.1.3** Translate SymbolTable to new antlr-sym PSymbolTableBase.ts and update all references
+- [ ] **2.1.4** Translate IScopedSymbol to new antlr-sym PIScopedSymbol.ts and update all references
+- [ ] **2.1.5** Translate VariableSymbol to new antlr-sym PVariableSymbol.ts and update all references
+- [ ] **2.1.6** Translate SymbolConstructor to new antlr-sym PSymbolConstructor.ts and update all references
+- [ ] **2.1.7** Translate Type to new antlr-sym PTypeBase.ts and update all references
+- [ ] **2.1.8** Translate TypeKind to new antlr-sym PTypeKindBase.ts and update all references
+- [ ] **2.1.9** Translate ReferenceKind to new antlr-sym PReferenceKind.ts and update all references
+- [ ] **2.1.10** Translate MethodFlags to new antlr-sym PMethodFlags.ts and update all references
+- [ ] **2.1.11** Translate Modifier to new antlr-sym PModifier.ts and update all references
+- [ ] **2.1.12** Translate INamespaceSymbol to new antlr-sym PINamespaceSymbol.ts and update all references
+
+- [ ] **2.2** Verify no direct antlr4-c3 imports remain outside antlr-sym/ and generated grammar; LSP smoke test
 
 ### Track B: `server/src/antlr-sym/` strict cleanup (parallel with A)
 
-- [ ] **2.6** Eliminate ~37 strict-mode errors in P-prefixed symbol wrappers (start with PType.ts, then PUtils.ts, then the rest)
+- [ ] **2.3** Eliminate ~37 strict-mode errors in P-prefixed symbol wrappers (start with PType.ts, then PUtils.ts, then the rest)
 
 ### Track C: Remaining `server/src/` strict cleanup
 
-- [ ] **2.7** Eliminate strict-mode errors in top-level server files not covered by 2.2–2.4 (server.ts, javaModules.ts, javaClassVisitor.ts, etc.)
+- [ ] **2.4** Eliminate strict-mode errors in top-level server files not covered by 2.2–2.3 (server.ts, javaModules.ts, javaClassVisitor.ts, etc.)
 
 ### Track D: Lock-in
 
-- [ ] **2.8** Enable `"strict": true` in server/tsconfig.json + full validation gate (build + bundle + dev-host smoke test)
+- [ ] **2.5** Enable `"strict": true` in server/tsconfig.json + full validation gate (build + bundle + dev-host smoke test)
 
 ## Phase 3: Processing v4.0+
 
