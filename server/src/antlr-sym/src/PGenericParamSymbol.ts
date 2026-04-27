@@ -1,4 +1,5 @@
-import { BaseSymbol } from "antlr4-c3";
+// import { BaseSymbol } from "antlr4-c3";
+import { PBaseSymbol } from "./PBaseSymbol";
 import { PComponentSymbol } from "./PComponentSymbol"
 import { PType } from "./PType"
 

@@ -1,23 +1,23 @@
-import { 
-	ScopedSymbol,
+import {
 	ReferenceKind,
 	TypeKind,
 } from "antlr4-c3";
+import { PScopedSymbol } from "./PScopedSymbol";
 import { IPType, PType, PTypeKind } from "./PType"
 
-export class PComponentSymbol extends ScopedSymbol implements IPType
+export class PComponentSymbol extends PScopedSymbol implements IPType
 {
 	readonly extends: PType | undefined;
-	
+
 	private generics: PType[] = [];
 
 
-	get arrayType() { return undefined; }
-	get extendType() { return this.extends; }
-	get implementTypes() { return []; }
-	get genericTypes() { return this.generics; }
-    get kind() { return TypeKind.Unknown; }
-	get outerType() { return undefined; }
+	get arrayType(): PType | undefined { return undefined; }
+	get extendType(): PType | undefined { return this.extends; }
+	get implementTypes(): PType[] { return []; }
+	get genericTypes(): PType[] { return this.generics; }
+	get kind() { return TypeKind.Unknown; }
+	get outerType(): PType | undefined { return undefined; }
 	get typeKind() { return PTypeKind.Component; }
 	get reference() { return ReferenceKind.Reference; }
 

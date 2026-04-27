@@ -1,48 +1,45 @@
-import { 
-	Type,
-	TypeKind,
+import {
 	ReferenceKind,
-	BaseSymbol,
 	IScopedSymbol,
-	VariableSymbol,
 	SymbolConstructor,
-	ScopedSymbol,
 	MethodFlags,
 	Modifier,
 } from "antlr4-c3";
-import { PClassSymbol} from "./PClassSymbol"
-import { PInterfaceSymbol} from "./PInterfaceSymbol"
-import { PMethodSymbol} from "./PMethodSymbol"
-import { PEnumSymbol} from "./PEnumSymbol"
-import { PEnumMemberSymbol} from "./PEnumMemberSymbol"
-import { PComponentSymbol} from "./PComponentSymbol"
-import { PSymbolTable } from './PSymbolTable';
-import { PNamespaceSymbol } from './PNamespaceSymbol';
-import { PLibraryTable } from './PLibraryTable';
-import { IPType, PType, PTypeKind, PPrimitiveKind } from './PType';
-import { PGenericParamSymbol } from './PGenericParamSymbol';
-import { PParameterSymbol} from "./PParameterSymbol";
+
+import { PBaseSymbol } from "./PBaseSymbol";
+import { PScopedSymbol } from "./PScopedSymbol";
+import { PVariableSymbol } from "./PVariableSymbol";
+import { PClassSymbol } from "./PClassSymbol";
+import { PInterfaceSymbol } from "./PInterfaceSymbol";
+import { PMethodSymbol } from "./PMethodSymbol";
+import { PEnumSymbol } from "./PEnumSymbol";
+import { PEnumMemberSymbol } from "./PEnumMemberSymbol";
+import { PComponentSymbol } from "./PComponentSymbol";
+import { PSymbolTable } from "./PSymbolTable";
+import { PNamespaceSymbol } from "./PNamespaceSymbol";
+import { PLibraryTable } from "./PLibraryTable";
+import { IPType, PType, PTypeKind, PPrimitiveKind } from "./PType";
+import { PGenericParamSymbol } from "./PGenericParamSymbol";
+import { PParameterSymbol } from "./PParameterSymbol";
 import { PThrowsSymbol } from "./PThrowsSymbol";
-
-
 
 
 export class CallContext
 {
 	public outter : CallContext | undefined;
 	public type : PType | undefined;
-	public symbol : ScopedSymbol | undefined;
-	public generics : Map<string, PType> = new Map<string, PType>(); 
+	public symbol : PScopedSymbol | undefined;
+	public generics : Map<string, PType> = new Map<string, PType>();
 
-	constructor( callerType : PType, callerSymbol : ScopedSymbol | undefined )
+	constructor( callerType : PType, callerSymbol : PScopedSymbol | undefined )
 	{
 		this.type = callerType;
 		this.symbol = callerSymbol;
 		PUtils.tryDefineCallGenerics(this);
 	}
 	setOutter(outter : CallContext | undefined) : CallContext
-	{ 
-		this.outter = outter; 
+	{
+		this.outter = outter;
 		return this;
 	}
 	defineGeneric(name:string, asType : PType)
@@ -51,7 +48,7 @@ export class CallContext
 	}
 	getResolvedGeneric(name : string) : PType | undefined
 	{
-		let result : PType; 
+		let result : PType | undefined;
 		result = this.generics.get(name);
 		if(!result && this.outter)
 			result = this.outter.getResolvedGeneric(name);
@@ -59,11 +56,11 @@ export class CallContext
 	}
 }
 
-export class PUtils 
+export class PUtils
 {
 	public static tryDefineCallGenerics(caller : CallContext)
 	{
-		if(!caller.symbol || !caller.type ) 
+		if(!caller.symbol || !caller.type )
 			return;
 		let genericParams = PUtils.getAllDirectChildrenMatchSync(caller.symbol, PGenericParamSymbol);
 		// what kind of generic were defined for this called symbol
@@ -81,9 +78,9 @@ export class PUtils
 
 	public static tryDefineCallGenericsFromParamTypeList(caller : CallContext, typeList : IPType[])
 	{
-		if((caller.symbol instanceof PMethodSymbol)==false) 
+		if((caller.symbol instanceof PMethodSymbol)==false)
 			return;
-		
+
 		let genericParams = PUtils.getAllDirectChildrenMatchSync(caller.symbol, PGenericParamSymbol);
 		if(genericParams.length == 0)
 			return;
@@ -96,11 +93,14 @@ export class PUtils
 			let definedType : PType | undefined;
 
 			// Try to find the param with the right generic
-			for(let j=0; j < params.length; j++)
+			for(let j=0; params!==undefined && j < params.length; j++)
 			{
-				if(params[j].type.typeKind == PTypeKind.Array && params[j].type.arrayType.typeKind == PTypeKind.Generic)
+				let paramType = params[j].type;
+				if(!paramType)
+					continue;
+				if(paramType.typeKind == PTypeKind.Array && paramType.arrayType && paramType.arrayType.typeKind == PTypeKind.Generic)
 				{
-					if( params[j].type.arrayType.name == genericName )
+					if( paramType.arrayType.name == genericName )
 					{
 						if(j < typeList.length)
 							definedType = typeList[j].arrayType;
@@ -108,9 +108,9 @@ export class PUtils
 				}
 				else
 				{
-					for(let k=0; k < params[j].type.genericTypes.length; k++)
+					for(let k=0; k < paramType.genericTypes.length; k++)
 					{
-						if( params[j].type.genericTypes[k].name == genericName )
+						if( paramType.genericTypes[k].name == genericName )
 						{
 							if(j < typeList.length)
 								definedType = typeList[j].genericTypes[k];
@@ -132,7 +132,7 @@ export class PUtils
 				return true;
 		}
 		return false;
-	} 
+	}
 
 	public static cloneTypeAsInstance(type: PType) : PType
 	{
@@ -168,7 +168,7 @@ export class PUtils
 
 	}
 
-	public static addIfNotRepeated<T extends BaseSymbol, Args extends unknown[]>(results: T[], candidates : T[])
+	public static addIfNotRepeated<T extends PBaseSymbol, Args extends unknown[]>(results: T[], candidates : T[])
 	{
 		for(let parentSymbol of candidates)
 		{
@@ -186,22 +186,22 @@ export class PUtils
 		}
 	}
 
-	public static compareSymbolName(symbol : BaseSymbol, name:string|undefined, compareFullSignature:boolean=false) : boolean
+	public static compareSymbolName(symbol : PBaseSymbol, name:string|undefined, compareFullSignature:boolean=false) : boolean
 	{
 		let symbolName = symbol.name;
 		if(symbol instanceof PMethodSymbol && !compareFullSignature) // if method, should search for specific signature or any with same name?
 			symbolName = PUtils.extractMethodName(symbolName);
 		return (symbolName == name);
 	}
-	
-	public static getAllSymbolsSync<T extends BaseSymbol, Args extends unknown[]>(ctx: IScopedSymbol, t: SymbolConstructor<T, Args>, name?:string, localOnly?: boolean, overridesAlso:boolean=false): T[] 
-	{
-        const results = []; 
 
-		if(ctx instanceof ScopedSymbol)
+	public static getAllSymbolsSync<T extends PBaseSymbol, Args extends unknown[]>(ctx: IScopedSymbol, t: SymbolConstructor<T, Args>, name?:string, localOnly?: boolean, overridesAlso:boolean=false): T[]
+	{
+        const results = [];
+
+		if(ctx instanceof PScopedSymbol)
 		{
-			const compareFullSignature = name && name.indexOf('(') >= 0;
-			for (const child of ctx.children) 
+			const compareFullSignature : boolean = !!name && name.indexOf('(') >= 0;
+			for (const child of ctx.children)
 			{
 				const isNameMatch = !name || PUtils.compareSymbolName(child, name, compareFullSignature);
 				const isRightType = (child instanceof t );
@@ -247,8 +247,8 @@ export class PUtils
 			let moreSymbols = PUtils.getAllMatchsSync(ctx.importStatics, t, name);
 			results.push(...moreSymbols);
 		}
-			
-        if (!localOnly && ctx.parent) 
+
+        if (!localOnly && ctx.parent)
 		{
 			const parentSymbols = PUtils.getAllSymbolsSync(ctx.parent, t, name, false);
 			results.push(...parentSymbols);
@@ -264,15 +264,15 @@ export class PUtils
 		return signature.substring(0, nameEndIndex);
 	}
 
-	public static resolveChildSymbolSync<T extends BaseSymbol, Args extends unknown[]>(ctx: IScopedSymbol, t: SymbolConstructor<T, Args>, name?:string): T | undefined
+	public static resolveChildSymbolSync<T extends PBaseSymbol, Args extends unknown[]>(ctx: IScopedSymbol, t: SymbolConstructor<T, Args>, name?:string): T | undefined
 	{
 		return PUtils.resolveSymbolMatchSync(ctx.children, t, name);
 	}
 
-	public static resolveSymbolMatchSync<T extends BaseSymbol, Args extends unknown[]>(lst: BaseSymbol[], t: SymbolConstructor<T, Args>, name?:string): T | undefined
+	public static resolveSymbolMatchSync<T extends PBaseSymbol, Args extends unknown[]>(lst: PBaseSymbol[], t: SymbolConstructor<T, Args>, name?:string): T | undefined
 	{
 		let result : T | undefined;
-		for (const child of lst) 
+		for (const child of lst)
 		{
 			const isNameMatch = !name || (child.name == name);
 			const isRightType = (child instanceof t );
@@ -285,16 +285,16 @@ export class PUtils
 		return result;
 	}
 
-	public static getAllDirectChildrenMatchSync<T extends BaseSymbol, Args extends unknown[]>(ctx: IScopedSymbol, t: SymbolConstructor<T, Args>, name?:string): T[]
+	public static getAllDirectChildrenMatchSync<T extends PBaseSymbol, Args extends unknown[]>(ctx: IScopedSymbol, t: SymbolConstructor<T, Args>, name?:string): T[]
 	{
 		return PUtils.getAllMatchsSync(ctx.children, t, name);
 	}
 
-	public static getAllMatchsSync<T extends BaseSymbol, Args extends unknown[]>(list: BaseSymbol[], t: SymbolConstructor<T, Args>, name?:string): T[]
+	public static getAllMatchsSync<T extends PBaseSymbol, Args extends unknown[]>(list: PBaseSymbol[], t: SymbolConstructor<T, Args>, name?:string): T[]
 	{
 		let result : T[] = [];
 		const compareFullSignature = name && name.indexOf('(') >= 0;
-		for (const child of list) 
+		for (const child of list)
 		{
 			let childName = child.name;
 			if(child instanceof PMethodSymbol && !compareFullSignature)
@@ -320,18 +320,18 @@ export class PUtils
 		return fullname;
 	}
 
-	public static resolveSymbolSync<T extends BaseSymbol, Args extends unknown[]>(ctx: BaseSymbol, t: SymbolConstructor<T, Args>, name?:string, localOnly?: boolean): T | undefined
+	public static resolveSymbolSync<T extends PBaseSymbol, Args extends unknown[]>(ctx: PBaseSymbol, t: SymbolConstructor<T, Args>, name?:string, localOnly?: boolean): T | undefined
 	{
         let result : T | undefined;
 
 		if(name && name.indexOf('.')>=0)
 		{
 			let nameParts : string [] = name.split(".");
-			let callContext = PUtils.resolveSymbolSync(ctx, ScopedSymbol, nameParts[0], false );
+			let callContext = PUtils.resolveSymbolSync(ctx, PScopedSymbol, nameParts[0], false );
 			let partIndex = 1;
 			while(callContext && partIndex < nameParts.length-1)
 			{
-				callContext = PUtils.resolveChildSymbolSync(callContext, ScopedSymbol, nameParts[partIndex]);
+				callContext = PUtils.resolveChildSymbolSync(callContext, PScopedSymbol, nameParts[partIndex]);
 				partIndex++;
 			}
 			if(callContext)
@@ -366,7 +366,7 @@ export class PUtils
 				}
 			}
 		}
-		else  if(ctx instanceof ScopedSymbol)
+		else  if(ctx instanceof PScopedSymbol)
 		{
 			const resultSymbol = PUtils.resolveChildSymbolSync(ctx, t, name);
 			if(resultSymbol)
@@ -381,8 +381,8 @@ export class PUtils
 			console.error("PSymbolTable.resolveComponentSync: "+name);
 		}
 
-			
-        if (!localOnly && ctx.parent) 
+
+        if (!localOnly && ctx.parent)
 		{
 			const parentSymbol = PUtils.resolveSymbolSync(ctx.parent, t, name, false);
 			if(parentSymbol)
@@ -403,13 +403,13 @@ export class PUtils
 
 	public static resolveGenericParamSymbolByName(ctx: IScopedSymbol, genericName:string) : PGenericParamSymbol | undefined
 	{
-		let result : PGenericParamSymbol | undefined; 
+		let result : PGenericParamSymbol | undefined;
 		while(ctx)
 		{
 			result = PUtils.resolveChildSymbolSync(ctx, PGenericParamSymbol, genericName);
 			if(result)
 				break;
-			if( (ctx.parent instanceof ScopedSymbol)==false )
+			if( (ctx.parent instanceof PScopedSymbol)==false )
 				break;
 			// if( !(ctx.parent instanceof PClassSymbol) && !(ctx.parent instanceof PInterfaceSymbol) )
 			// 	break;
@@ -418,12 +418,12 @@ export class PUtils
 		return result;
 	}
 
-	public static resolveSymbolSyncFromPType<T extends BaseSymbol, Args extends unknown[]>(ctx: IScopedSymbol, t: SymbolConstructor<T, Args>, ptype:IPType): T | undefined
+	public static resolveSymbolSyncFromPType<T extends PBaseSymbol, Args extends unknown[]>(ctx: IScopedSymbol, t: SymbolConstructor<T, Args>, ptype:IPType): T | undefined
 	{
-		let outter : PComponentSymbol | undefined; 
+		let outter : PComponentSymbol | undefined;
 		if(ptype.outerType)
 			outter = PUtils.resolveComponentSyncFromPType(ctx, PComponentSymbol, ptype.outerType);
-		
+
 		if(outter)
 			return PUtils.resolveSymbolSync(outter, t, ptype.name);
 		else
@@ -432,10 +432,10 @@ export class PUtils
 
 	public static resolveComponentSyncFromPType<T extends PComponentSymbol, Args extends unknown[]>(ctx: IScopedSymbol, t: SymbolConstructor<T, Args>, ptype:IPType): T | undefined
 	{
-		let outter : PComponentSymbol | undefined; 
+		let outter : PComponentSymbol | undefined;
 		if(ptype.outerType)
 			outter = PUtils.resolveComponentSyncFromPType(ctx, PComponentSymbol, ptype.outerType);
-		
+
 		if(outter)
 			return PUtils.resolveComponentSync(outter, t, ptype.name);
 		else
@@ -460,7 +460,7 @@ export class PUtils
 				return callContext;
 			return undefined;
 		}
-		if(ctx instanceof ScopedSymbol)
+		if(ctx instanceof PScopedSymbol)
 		{
 			const resultSymbol = PUtils.resolveChildSymbolSync(ctx, t, name);
 			if(resultSymbol)
@@ -474,7 +474,7 @@ export class PUtils
 
 			console.error("PSymbolTable.resolveComponentSync: "+name);
 		}
-		else if (ctx.parent) 
+		else if (ctx.parent)
 		{
 			const parentSymbol = PUtils.resolveComponentSync(ctx.parent, t, name);
 			if(parentSymbol)
@@ -483,16 +483,16 @@ export class PUtils
     	return undefined;
 	}
 
-	public static resolveSymbolFromTypeSync(currentScope: ScopedSymbol, type: IPType): ScopedSymbol
+	public static resolveSymbolFromTypeSync(currentScope: PScopedSymbol, type: IPType): PScopedSymbol
 	{
-		let result : ScopedSymbol | undefined;
+		let result : PScopedSymbol | undefined;
 		if(type instanceof PClassSymbol)
 			result = type;
 		else if(type instanceof PInterfaceSymbol)
 			result = type;
 		else if(type instanceof PEnumSymbol)
 			result = type;
-		else if(type.typeKind == PTypeKind.Class || type.typeKind == PTypeKind.Interface || 
+		else if(type.typeKind == PTypeKind.Class || type.typeKind == PTypeKind.Interface ||
 				type.typeKind == PTypeKind.Component || type.typeKind == PTypeKind.Namespace || type.typeKind == PTypeKind.Enum)
 		{
 			result = PUtils.resolveComponentSyncFromPType(currentScope, PComponentSymbol, type );
@@ -502,9 +502,9 @@ export class PUtils
 		return result;
 	}
 
-	public static resolveTypeNameReference(currentScope : ScopedSymbol, typeName: string) : ScopedSymbol | undefined
+	public static resolveTypeNameReference(currentScope : PScopedSymbol, typeName: string) : PScopedSymbol | undefined
 	{
-		let callContext : ScopedSymbol | undefined;
+		let callContext : PScopedSymbol | undefined;
 		callContext = PUtils.resolveSymbolSync(currentScope, PClassSymbol, typeName, false );
 		if(!callContext)
 			callContext = PUtils.resolveSymbolSync(currentScope, PInterfaceSymbol, typeName, false );
@@ -513,7 +513,7 @@ export class PUtils
 		return callContext;
 	}
 
-	public static getFirstParentMatch<T extends BaseSymbol, Args extends unknown[]>(t: SymbolConstructor<T, Args>, ctx: BaseSymbol): T | undefined 
+	public static getFirstParentMatch<T extends PBaseSymbol, Args extends unknown[]>(t: SymbolConstructor<T, Args>, ctx: PBaseSymbol): T | undefined
 	{
 		if (!ctx.parent)
 			return;
@@ -522,10 +522,10 @@ export class PUtils
 		return PUtils.getFirstParentMatch(t, ctx.parent);
 	}
 
-	public static resolveVariableDeclaration(name:string, symb : BaseSymbol) : VariableSymbol | undefined
+	public static resolveVariableDeclaration(name:string, symb : PBaseSymbol) : PVariableSymbol | undefined
 	{
-		let res : BaseSymbol | undefined = symb.resolveSync(name);
-		if(res instanceof VariableSymbol)
+		let res : PBaseSymbol | undefined = symb.resolveSync(name);
+		if(res instanceof PVariableSymbol)
 			return res;
 		return;
 	}
@@ -576,13 +576,13 @@ export class PUtils
 			return symbolType.name;
 	}
 
-	static checkComparableTypes(left: IPType, right: IPType, scope: ScopedSymbol) : boolean
+	static checkComparableTypes(left: IPType, right: IPType, scope: PScopedSymbol) : boolean
 	{
 		let comparingInterfaces = left.typeKind == PTypeKind.Interface || right.typeKind == PTypeKind.Interface;
 		let comparingClasses = left.typeKind == PTypeKind.Class || right.typeKind == PTypeKind.Class;
 		let comparingGenericClasses = left.typeKind == PTypeKind.Generic || right.typeKind == PTypeKind.Generic;
 		let comparingEnums = left.typeKind == PTypeKind.Enum || right.typeKind == PTypeKind.Enum;
-		
+
 		let comparingArray = left.typeKind == PTypeKind.Array || right.typeKind == PTypeKind.Array;
 		let comparingNull = left.name == "null" || right.name == "null";
 		let comparingPrimitive = left.typeKind == PTypeKind.Primitive || right.typeKind == PTypeKind.Primitive;
@@ -594,7 +594,7 @@ export class PUtils
 		{
 			let primitive = left.typeKind == PTypeKind.Primitive ? left : right;
 			let classType = left.typeKind == PTypeKind.Class ? left : right;
-			let primitiveKind = primitive instanceof PType ? primitive.primitiveKind : PPrimitiveKind.Unknown;
+			let primitiveKind : PPrimitiveKind = (primitive instanceof PType && primitive.primitiveKind !== undefined) ? primitive.primitiveKind : PPrimitiveKind.Unknown;
 			return PType.canClassBeBoxedOrAutoboxed(classType, primitiveKind);
 			// if(classType.name == "Object" || PType.isDefaultObjectPath(classType.name))
 			// 	return true;
@@ -614,14 +614,14 @@ export class PUtils
 	public static setMethodLastVargs( method : PMethodSymbol)
 	{
 		method.methodFlags |= MethodFlags.Virtual;
-	} 
+	}
 
 	public static hasMethodLastVargs( method : PMethodSymbol)
 	{
 		return (method.methodFlags & MethodFlags.Virtual) != 0;
 	}
 
-	public static extractSignature( symbol : BaseSymbol ) : string
+	public static extractSignature( symbol : PBaseSymbol ) : string
 	{
 		let result : string;
 		if(symbol.parent && !(symbol.parent instanceof PSymbolTable) && !(symbol.parent instanceof PLibraryTable) )
@@ -631,7 +631,7 @@ export class PUtils
 
 		// if(symbol instanceof PMethodSymbol)
 		// 	result += PUtils.convertToSignature(symbol);
-		
+
 		return result;
 	}
 
@@ -652,7 +652,7 @@ export class PUtils
 			{
 				genericSignature += param.name;
 				genericSignature += ':';
-				
+
 				for(let i=0; i < param.formalTypes.length; i++ )
 				{
 					if(i!=0 || param.formalTypes[i].typeKind != PTypeKind.Class)
@@ -660,7 +660,7 @@ export class PUtils
 					genericSignature += PUtils.convertPTypeToSignature(param.formalTypes[i]);
 				}
 
-			}	
+			}
 			genericSignature += '>';
 		}
 
@@ -680,7 +680,7 @@ export class PUtils
 		if(type == undefined)
 			return 'V';
 		if(type.typeKind == PTypeKind.Primitive)
-			return PUtils.convertPrimitiveToSignature(type.primitiveKind);
+			return PUtils.convertPrimitiveToSignature(type.primitiveKind ?? PPrimitiveKind.Unknown);
 		else if(type.typeKind == PTypeKind.Void)
 			return 'V';
 		else if(type.typeKind == PTypeKind.Class || type.typeKind == PTypeKind.Interface || type.typeKind == PTypeKind.Component || type.typeKind == PTypeKind.Enum)
@@ -706,6 +706,7 @@ export class PUtils
 		{
 			return 'T' + type.name + ';';
 		}
+		return 'V';
 	}
 
 	public static convertPrimitiveToSignature( kind : PPrimitiveKind ) : string

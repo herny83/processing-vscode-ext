@@ -1,4 +1,4 @@
-import { BaseSymbol } from "antlr4-c3";
+import { PBaseSymbol } from "./PBaseSymbol";
 import { PComponentSymbol } from "./PComponentSymbol"
 import { PMethodSymbol } from "./PMethodSymbol"
 import { PFieldSymbol } from "./PFieldSymbol"
@@ -44,16 +44,16 @@ export class PInterfaceSymbol extends PComponentSymbol
      * @returns the first symbol with a given name, in the order of appearance in this scope
      *          or any of the parent scopes (conditionally).
      */
-	resolveSync(name:string, localOnly: boolean = false) : BaseSymbol | undefined
+	resolveSync(name:string, localOnly: boolean = false) : PBaseSymbol | undefined
 	{
-		let result : BaseSymbol | undefined = super.resolveSync(name, localOnly);
+		let result : PBaseSymbol | undefined = super.resolveSync(name, localOnly);
 		if(result)
 			return result;
 
 		// Not found yet, keep searching in the extensions	
 		for(let i=0; i < this.implements.length; i++)
 		{
-			let implSymbol : BaseSymbol | undefined = super.resolveSync(this.implements[i].name, false);
+			let implSymbol : PBaseSymbol | undefined = super.resolveSync(this.implements[i].name, false);
 			if(implSymbol && implSymbol instanceof PInterfaceSymbol)
 				result = implSymbol.resolveSync(name, true);
 			if( result )
@@ -65,14 +65,14 @@ export class PInterfaceSymbol extends PComponentSymbol
 
 	resolveInheritance(name:string) : PInterfaceSymbol | undefined
 	{
-		let result : BaseSymbol | undefined;
+		let result : PBaseSymbol | undefined;
 		if(this.name===name)
 			result = this;
 		if(!result)
 		{
 			for(let i=0; i < this.implements.length; i++)
 			{
-				let implSymbol : BaseSymbol | undefined = super.resolveSync(this.implements[i].name, false);
+				 let implSymbol : PBaseSymbol | undefined = super.resolveSync(this.implements[i].name, false);
 				if(implSymbol && implSymbol instanceof PInterfaceSymbol)
 					result = implSymbol.resolveInheritance(name);
 				if( result )

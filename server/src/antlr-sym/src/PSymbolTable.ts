@@ -1,19 +1,21 @@
-import * as symb from "antlr4-c3";
+import { SymbolConstructor } from "antlr4-c3";
+import { PSymbolTableBase } from "./PSymbolTableBase";
+import { PBaseSymbol } from "./PBaseSymbol";
 import { PNamespaceSymbol } from "./PNamespaceSymbol"
 import { PComponentSymbol } from "./PComponentSymbol"
 import { PLibraryTable } from './PLibraryTable';
 import { PUtils } from './PUtils';
 import { IPType } from './PType';
 
-export class PSymbolTable extends symb.SymbolTable 
+export class PSymbolTable extends PSymbolTableBase
 {
 	public dependencyTable : PLibraryTable = new PLibraryTable("", { allowDuplicateSymbols: true});
-	public librarySymbolCollection : Map<string, symb.BaseSymbol[]> = new Map<string, symb.BaseSymbol[]>();
-	protected defaultImported : Set<symb.BaseSymbol> = new Set<symb.BaseSymbol>();
-	public importTable : Map<string, symb.BaseSymbol> = new Map<string, symb.BaseSymbol>();
-	public importStatics : symb.BaseSymbol [] = [];
+	public librarySymbolCollection : Map<string, PBaseSymbol[]> = new Map<string, PBaseSymbol[]>();
+	protected defaultImported : Set<PBaseSymbol> = new Set<PBaseSymbol>();
+	public importTable : Map<string, PBaseSymbol> = new Map<string, PBaseSymbol>();
+	public importStatics : PBaseSymbol [] = [];
 
-	constructor(name: string, options: symb.SymbolTableOptions)
+	constructor(name: string, options: ConstructorParameters<typeof PSymbolTableBase>[1])
 	{
 		super(name, options);
 	}
@@ -28,7 +30,7 @@ export class PSymbolTable extends symb.SymbolTable
 		super.clear();
 	}
 
-	public registerLibrarySymbols(libName: string, symbol: symb.BaseSymbol)
+	public registerLibrarySymbols(libName: string, symbol: PBaseSymbol)
 	{
 		if (!this.librarySymbolCollection.has(libName))
 			this.librarySymbolCollection.set(libName, []);
@@ -47,8 +49,10 @@ export class PSymbolTable extends symb.SymbolTable
 		this.importTable.clear();
 	}
 
-	public resolveImportTableComponent<T extends symb.BaseSymbol, Args extends unknown[]>(t:  symb.SymbolConstructor<T, Args>, importPath : string) : T | undefined
+	public resolveImportTableComponent<T extends PBaseSymbol, Args extends unknown[]>(t: SymbolConstructor<T, Args>, importPath : string | undefined) : T | undefined
 	{
+		if(importPath === undefined)
+			return undefined;
 		let result = this.importTable.get(importPath) as T | undefined;
 		if(result)
 			return result;
@@ -59,6 +63,7 @@ export class PSymbolTable extends symb.SymbolTable
 			if(resolved)
 				return resolved;
 		}
+		return undefined;
 	}
 
 	public addDefaultImport(importPath: string) 
@@ -90,7 +95,7 @@ export class PSymbolTable extends symb.SymbolTable
 		}
 	}
 
-	public addToImportTable(imports : symb.BaseSymbol[], staticImports: symb.BaseSymbol[])
+	public addToImportTable(imports : PBaseSymbol[], staticImports: PBaseSymbol[])
 	{
 		for (const symb of imports)
 			this.importTable.set(symb.name, symb);
@@ -104,7 +109,7 @@ export class PSymbolTable extends symb.SymbolTable
 
 	public getFullPath(ptype: IPType, checkAliasToo:boolean=true) : string
 	{
-		if(ptype instanceof symb.BaseSymbol)
+		if(ptype instanceof PBaseSymbol)
 			return ptype.qualifiedName(".", true, false);
 		if(ptype.outerType)
 			return this.getFullPath(ptype.outerType, false) + '.' + ptype.name;
@@ -126,7 +131,7 @@ export class PSymbolTable extends symb.SymbolTable
 		return name;
 	}
 
-    resolveSync(name:string, localOnly = false) : symb.BaseSymbol | undefined
+	resolveSync(name:string, localOnly = false) : PBaseSymbol | undefined
 	{
 		let result = super.resolveSync(name, localOnly);
 

@@ -1,8 +1,8 @@
-import { BaseSymbol } from "antlr4-c3";
+import { PBaseSymbol } from "./PBaseSymbol";
 import { PType, PTypeKind } from "./PType"
 
 /** A symbol with an attached type (variables, fields etc.). */
-export class PTypedSymbol extends BaseSymbol 
+export class PTypedSymbol extends PBaseSymbol 
 {
     type: PType | undefined;
     constructor(name: string, type?: PType)

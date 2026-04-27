@@ -1,20 +1,23 @@
-import * as symb from "antlr4-c3";
+import { SymbolConstructor } from "antlr4-c3";
+import { PSymbolTableBase } from "./PSymbolTableBase";
+import { PScopedSymbol } from "./PScopedSymbol";
+import { PBaseSymbol } from "./PBaseSymbol";
 import { PNamespaceSymbol } from "./PNamespaceSymbol"
 import { PComponentSymbol } from "./PComponentSymbol"
 import { PUtils } from "./PUtils"
 
-export class PLibraryTable extends symb.SymbolTable 
+export class PLibraryTable extends PSymbolTableBase
 {
-	constructor(name: string, options: symb.SymbolTableOptions)
+	constructor(name: string, options: ConstructorParameters<typeof PSymbolTableBase>[1])
 	{
 		super(name, options);
 	}
 
-	getOrCreateFor(symbolPath:string, delimiter:string="/", lastToo:boolean=false, createNamespace:boolean=true, at?:symb.IScopedSymbol|undefined) : symb.IScopedSymbol
+	getOrCreateFor(symbolPath:string, delimiter:string="/", lastToo:boolean=false, createNamespace:boolean=true, at?:PScopedSymbol|undefined) : PScopedSymbol
 	{
 		const parts = symbolPath.split(delimiter);
         let i = 0;
-        let currentParent : symb.IScopedSymbol = at ? at : this;
+		let currentParent : PScopedSymbol = at ? at : this;
 
 		let lastsRemoved = (lastToo?0:1);
 		while (i < parts.length - lastsRemoved) 
@@ -34,7 +37,7 @@ export class PLibraryTable extends symb.SymbolTable
         return currentParent;
 	}
 
-	resolveComponent<T extends PComponentSymbol, Args extends unknown[]>(t: symb.SymbolConstructor<T, Args>, name:string) : T | undefined
+	resolveComponent<T extends PComponentSymbol, Args extends unknown[]>(t: SymbolConstructor<T, Args>, name:string) : T | undefined
 	{
 		if(name.indexOf('.')>=0)
 		{
@@ -46,19 +49,19 @@ export class PLibraryTable extends symb.SymbolTable
 				callContext = PUtils.resolveChildSymbolSync(callContext, PComponentSymbol, nameParts[partIndex]);
 				partIndex++;
 			}
-			return (callContext instanceof t)? callContext : undefined;
+			return (callContext instanceof t) ? (callContext as T) : undefined;
 		}
 		else
 		{
-			let callContext = PUtils.resolveChildSymbolSync(this, t, name );
-			return callContext;
+			return PUtils.resolveChildSymbolSync<T, Args>(this, t, name);
 		}
 	}
 
-	removeSymbolAndCleanUp(symbol: symb.BaseSymbol): void 
+	removeSymbolAndCleanUp(symbol: PBaseSymbol): void 
 	{
 		const savedParent = symbol.parent;
-		savedParent.removeSymbol(symbol);
+		if(savedParent)
+			savedParent.removeSymbol(symbol);
 		if (savedParent instanceof PNamespaceSymbol && savedParent.children.length == 0)
 			this.removeSymbolAndCleanUp(savedParent);
 	}

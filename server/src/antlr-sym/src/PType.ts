@@ -121,16 +121,16 @@ export class PType implements IPType
 	public static isDefaultObjectPath(path: string) {return path == defaultObjectClass || path == "Object"; }
 	public static isDefaultStringPath(path: string) {return path == defaultStringClass; }
     
-    name: string;
-    genericTypes: PType[];
+    name!: string;
+    genericTypes!: PType[];
     extendType : PType | undefined;
-    implementTypes: PType[];
+    implementTypes!: PType[];
     outerType : PType | undefined;
 	kind : TypeKind = TypeKind.Unknown;
-    typeKind: PTypeKind;
-    reference: ReferenceKind;
+    typeKind!: PTypeKind;
+    reference!: ReferenceKind;
 
-    arrayType: PType;
+    arrayType: PType | undefined;
     primitiveKind : PPrimitiveKind | undefined;
     isFullPath : boolean = false;
 
@@ -152,6 +152,7 @@ export class PType implements IPType
             if(kind == type.typeKind)
                 return true;
         }
+        return false;
     }
 
     public static getBoxedPrimitiveType(primKind : PPrimitiveKind ) : PType | undefined
@@ -187,7 +188,7 @@ export class PType implements IPType
 
     public hasGenericParams() { return this.genericTypes.length > 0; }
 
-    public setOutter(outter:PType) : PType { this.outerType = outter; return this; }
+    public setOutter(outter:PType|undefined) : PType { this.outerType = outter; return this; }
 
     public setReference(refType:ReferenceKind) : PType { this.reference = refType; return this; }
 
@@ -195,9 +196,9 @@ export class PType implements IPType
 
     public setGenericTypes(generics: PType[]) : PType { this.genericTypes = PType.createCloneArray(generics); return this; }
     public setImplementTypes(implementTypes: PType[]) : PType { this.implementTypes = PType.createCloneArray(implementTypes); return this; }
-    
+
     public setPrimitive(primitive: PPrimitiveKind|undefined) : PType { this.primitiveKind = primitive; return this; }
-    public setArrayType(arrayType: PType) : PType { this.arrayType = arrayType; return this; }
+    public setArrayType(arrayType: PType|undefined) : PType { this.arrayType = arrayType; return this; }
 
 
     public static canClassBeBoxedOrAutoboxed(classType : IPType, primKind : PPrimitiveKind ) : boolean

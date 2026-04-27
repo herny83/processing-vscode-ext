@@ -1,10 +1,10 @@
 import { PType } from "./PType"
 import { PComponentSymbol } from "./PComponentSymbol"
 
-export class PEnumMemberSymbol extends PComponentSymbol 
+export class PEnumMemberSymbol extends PComponentSymbol
 {
     value: unknown;
-	type: PType;
+	type: PType | undefined;
     constructor(name: string, value: unknown, type?: PType)
 	{
 		super(name);

@@ -1,7 +1,7 @@
-import { BaseSymbol } from "antlr4-c3";
+import { PBaseSymbol } from "./PBaseSymbol";
 import { PType } from "./PType"
 
-export class PThrowsSymbol extends BaseSymbol 
+export class PThrowsSymbol extends PBaseSymbol 
 {
 	readonly type : PType;
 

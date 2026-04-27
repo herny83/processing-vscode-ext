@@ -1,4 +1,4 @@
-import { BaseSymbol } from "antlr4-c3";
+import { PBaseSymbol } from "./PBaseSymbol";
 import { PInterfaceSymbol } from "./PInterfaceSymbol"
 import { PMethodSymbol } from "./PMethodSymbol"
 import { PFieldSymbol } from "./PFieldSymbol"
@@ -46,48 +46,48 @@ export class PClassSymbol extends PComponentSymbol
      * @returns the first symbol with a given name, in the order of appearance in this scope
      *          or any of the parent scopes (conditionally).
      */
-	// resolveSync(name:string, localOnly: boolean = false) : BaseSymbol | undefined
+	// resolveSync(name:string, localOnly: boolean = false) : PBaseSymbol | undefined
 	// {
-	// 	let result : BaseSymbol | undefined = super.resolveSync(name, true);
-	// 	if(result)
-	// 		return result;
+	//  let result : PBaseSymbol | undefined = super.resolveSync(name, true);
+	//  if(result)
+	//      return result;
 
-	// 	// Not found yet, keep searching in the extensions
-	// 	if(this.extends)
-	// 	{
-	// 		let extSymbol : BaseSymbol | undefined = super.resolveSync(this.extends.name, true);
-	// 		if(extSymbol && extSymbol instanceof PClassSymbol)
-	// 			result = extSymbol.resolveSync(name, true);
-	// 	}
-	// 	if(!result)
-	// 	{
-	// 		for(let i=0; i < this.implements.length; i++)
-	// 		{
-	// 			let implSymbol : BaseSymbol | undefined = super.resolveSync(this.implements[i].name, true);
-	// 			if(implSymbol && implSymbol instanceof PInterfaceSymbol)
-	// 				result = implSymbol.resolveSync(name);
-	// 			if( result )
-	// 				break;
-	// 		}
-	// 	}
-	// 	// Nothing found locally. Let the parent continue.
-	// 	if (!localOnly) {
-	// 		if (this.parent) {
-	// 			return this.parent.resolveSync(name, false);
-	// 		}
-	// 	}
-	// 	return result;
+	//  // Not found yet, keep searching in the extensions
+	//  if(this.extends)
+	//  {
+	//      let extSymbol : PBaseSymbol | undefined = super.resolveSync(this.extends.name, true);
+	//      if(extSymbol && extSymbol instanceof PClassSymbol)
+	//          result = extSymbol.resolveSync(name, true);
+	//  }
+	//  if(!result)
+	//  {
+	//      for(let i=0; i < this.implements.length; i++)
+	//      {
+	//          let implSymbol : PBaseSymbol | undefined = super.resolveSync(this.implements[i].name, true);
+	//          if(implSymbol && implSymbol instanceof PInterfaceSymbol)
+	//              result = implSymbol.resolveSync(name);
+	//          if( result )
+	//              break;
+	//      }
+	//  }
+	//  // Nothing found locally. Let the parent continue.
+	//  if (!localOnly) {
+	//      if (this.parent) {
+	//          return this.parent.resolveSync(name, false);
+	//      }
+	//  }
+	//  return result;
 	// }
 
-	resolveInheritance(name:string) : BaseSymbol | undefined
+	resolveInheritance(name:string) : PBaseSymbol | undefined
 	{
-		let result : BaseSymbol | undefined;
+		let result : PBaseSymbol | undefined;
 		if(this.name===name)
 			result = this;
 
 		if(!result && this.extends && this.parent)
 		{
-			let extSymbol : BaseSymbol | undefined = this.parent.resolveSync(this.extends.name, false);
+			let extSymbol : PBaseSymbol | undefined = this.parent.resolveSync(this.extends.name, false);
 			if(extSymbol && extSymbol instanceof PClassSymbol)
 				result = extSymbol.resolveInheritance(name);
 		}
@@ -95,7 +95,7 @@ export class PClassSymbol extends PComponentSymbol
 		{
 			for(let i=0; i < this.implements.length; i++)
 			{
-				let implSymbol : BaseSymbol | undefined = super.resolveSync(this.implements[i].name, false);
+				 let implSymbol : PBaseSymbol | undefined = super.resolveSync(this.implements[i].name, false);
 				if(implSymbol && implSymbol instanceof PInterfaceSymbol)
 					result = implSymbol.resolveInheritance(name);
 				if( result )
