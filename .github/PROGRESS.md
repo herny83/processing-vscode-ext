@@ -56,7 +56,7 @@ Work that came up between Phase 1 completion and starting Phase 2. Not part of a
 - [x] **2.1.1** Translate BaseSymbol to new antlr-sym PBaseSymbol.ts and update all references — 2026-04-26: All references updated to use PBaseSymbol wrapper (thin subclass of antlr4-c3 BaseSymbol), imports fixed, no errors
 - [x] **2.1.2** Translate ScopedSymbol to new antlr-sym PScopedSymbol.ts and update all references — 2026-04-27: All references updated to use PScopedSymbol wrapper, imports and types fixed, no errors
 - [x] **2.1.3** Translate SymbolTable to new antlr-sym PSymbolTableBase.ts and update all references
-- [ ] **2.1.4** Translate IScopedSymbol to new antlr-sym PIScopedSymbol.ts and update all references
+- [x] **2.1.4** Translate IScopedSymbol to new antlr-sym PIScopedSymbol.ts and update all references — 2026-04-27: Created PIScopedSymbol wrapper, updated all references and imports, validated 0 errors
 - [ ] **2.1.5** Translate VariableSymbol to new antlr-sym PVariableSymbol.ts and update all references
 - [ ] **2.1.6** Translate SymbolConstructor to new antlr-sym PSymbolConstructor.ts and update all references
 - [ ] **2.1.7** Translate Type to new antlr-sym PTypeBase.ts and update all references

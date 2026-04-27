@@ -5,6 +5,7 @@ import { PdeContentInfo } from "./sketch";
 import { Token } from 'antlr4ts'
 import { Range } from 'vscode-languageserver'
 import * as symb from 'antlr4-c3'
+import { PIScopedSymbol } from './antlr-sym';
 import * as pp from './grammer/ProcessingParser';
 import * as parseUtils from './astutils'
 import * as psymb from "./antlr-sym"
@@ -810,7 +811,7 @@ export class UsageVisitor extends AbstractParseTreeVisitor<psymb.IPType | undefi
 		let thisCall = methodCall.THIS();
 		let superCall = methodCall.SUPER();
 	
-		let callScope: symb.IScopedSymbol = currentScope;
+		let callScope: PIScopedSymbol = currentScope;
 		let expressionType : psymb.IPType | undefined;
 		let caster = methodCall.functionWithPrimitiveTypeName();
 		let paramExpressionList = methodCall.expressionList();
@@ -1704,7 +1705,7 @@ export class UsageVisitor extends AbstractParseTreeVisitor<psymb.IPType | undefi
 		return false;
 	}
 
-	tryFixComponentType( type: psymb.PType, scope : symb.IScopedSymbol, callerScope ?: symb.IScopedSymbol | undefined )
+	tryFixComponentType( type: psymb.PType, scope : PIScopedSymbol, callerScope ?: PIScopedSymbol | undefined )
 	{
 		if(type == undefined)
 			return;

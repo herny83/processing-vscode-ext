@@ -6,6 +6,7 @@ import * as server from './server'
 import { ParseTree, TerminalNode } from 'antlr4ts/tree'
 import { ParserRuleContext } from 'antlr4ts';
 import * as symb from 'antlr4-c3'
+import { PIScopedSymbol } from './antlr-sym';
 import * as dm from './definitionsMap'
 import * as lsp from 'vscode-languageserver'
 import * as psymb from './antlr-sym';
@@ -48,7 +49,7 @@ let pdeMap  = new Map<string, PdeContentInfo>();
 export interface UnresolvedType
 {
 	type: psymb.PType;
-	scope : symb.IScopedSymbol;
+	scope : PIScopedSymbol;
 }
 
 export class PdeContentInfo implements IDiagnosticReporter
@@ -145,7 +146,7 @@ export class PdeContentInfo implements IDiagnosticReporter
 		}
 	}
 
-	public addUnresolvedType(type: psymb.PType, scope: symb.IScopedSymbol)
+	public addUnresolvedType(type: psymb.PType, scope: PIScopedSymbol)
 	{
 		if(!this.unresolvedTypes)
 			this.unresolvedTypes = [];
@@ -402,7 +403,7 @@ export class PdeContentInfo implements IDiagnosticReporter
 	   this.diagnostics.push(diagnostic);
 	}
 
-	public tryFixComponentType( type: psymb.PType, scope : symb.IScopedSymbol, callerScope ?: symb.IScopedSymbol | undefined )
+	public tryFixComponentType( type: psymb.PType, scope : PIScopedSymbol, callerScope ?: PIScopedSymbol | undefined )
 		{
 			if(type == undefined)
 				return;

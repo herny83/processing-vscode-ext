@@ -1,6 +1,5 @@
 import {
 	ReferenceKind,
-	IScopedSymbol,
 	SymbolConstructor,
 	MethodFlags,
 	Modifier,
@@ -8,6 +7,7 @@ import {
 
 import { PBaseSymbol } from "./PBaseSymbol";
 import { PScopedSymbol } from "./PScopedSymbol";
+import { PIScopedSymbol } from "./PIScopedSymbol";
 import { PVariableSymbol } from "./PVariableSymbol";
 import { PClassSymbol } from "./PClassSymbol";
 import { PInterfaceSymbol } from "./PInterfaceSymbol";
@@ -194,7 +194,7 @@ export class PUtils
 		return (symbolName == name);
 	}
 
-	public static getAllSymbolsSync<T extends PBaseSymbol, Args extends unknown[]>(ctx: IScopedSymbol, t: SymbolConstructor<T, Args>, name?:string, localOnly?: boolean, overridesAlso:boolean=false): T[]
+	public static getAllSymbolsSync<T extends PBaseSymbol, Args extends unknown[]>(ctx: PIScopedSymbol, t: SymbolConstructor<T, Args>, name?:string, localOnly?: boolean, overridesAlso:boolean=false): T[]
 	{
         const results = [];
 
@@ -264,7 +264,7 @@ export class PUtils
 		return signature.substring(0, nameEndIndex);
 	}
 
-	public static resolveChildSymbolSync<T extends PBaseSymbol, Args extends unknown[]>(ctx: IScopedSymbol, t: SymbolConstructor<T, Args>, name?:string): T | undefined
+	public static resolveChildSymbolSync<T extends PBaseSymbol, Args extends unknown[]>(ctx: PIScopedSymbol, t: SymbolConstructor<T, Args>, name?:string): T | undefined
 	{
 		return PUtils.resolveSymbolMatchSync(ctx.children, t, name);
 	}
@@ -285,7 +285,7 @@ export class PUtils
 		return result;
 	}
 
-	public static getAllDirectChildrenMatchSync<T extends PBaseSymbol, Args extends unknown[]>(ctx: IScopedSymbol, t: SymbolConstructor<T, Args>, name?:string): T[]
+	public static getAllDirectChildrenMatchSync<T extends PBaseSymbol, Args extends unknown[]>(ctx: PIScopedSymbol, t: SymbolConstructor<T, Args>, name?:string): T[]
 	{
 		return PUtils.getAllMatchsSync(ctx.children, t, name);
 	}
@@ -391,7 +391,7 @@ export class PUtils
         return undefined;
 	}
 
-	public static resolveGenericParamSymbol(ctx: IScopedSymbol, ptype:IPType) : PGenericParamSymbol | undefined
+	public static resolveGenericParamSymbol(ctx: PIScopedSymbol, ptype:IPType) : PGenericParamSymbol | undefined
 	{
 		if(ptype.outerType)
 			return undefined;
@@ -401,7 +401,7 @@ export class PUtils
 		return PUtils.resolveGenericParamSymbolByName(ctx, ptype.name);
 	}
 
-	public static resolveGenericParamSymbolByName(ctx: IScopedSymbol, genericName:string) : PGenericParamSymbol | undefined
+	public static resolveGenericParamSymbolByName(ctx: PIScopedSymbol, genericName:string) : PGenericParamSymbol | undefined
 	{
 		let result : PGenericParamSymbol | undefined;
 		while(ctx)
@@ -418,7 +418,7 @@ export class PUtils
 		return result;
 	}
 
-	public static resolveSymbolSyncFromPType<T extends PBaseSymbol, Args extends unknown[]>(ctx: IScopedSymbol, t: SymbolConstructor<T, Args>, ptype:IPType): T | undefined
+	public static resolveSymbolSyncFromPType<T extends PBaseSymbol, Args extends unknown[]>(ctx: PIScopedSymbol, t: SymbolConstructor<T, Args>, ptype:IPType): T | undefined
 	{
 		let outter : PComponentSymbol | undefined;
 		if(ptype.outerType)
@@ -430,7 +430,7 @@ export class PUtils
 			return PUtils.resolveSymbolSync(ctx, t, ptype.name);
 	}
 
-	public static resolveComponentSyncFromPType<T extends PComponentSymbol, Args extends unknown[]>(ctx: IScopedSymbol, t: SymbolConstructor<T, Args>, ptype:IPType): T | undefined
+	public static resolveComponentSyncFromPType<T extends PComponentSymbol, Args extends unknown[]>(ctx: PIScopedSymbol, t: SymbolConstructor<T, Args>, ptype:IPType): T | undefined
 	{
 		let outter : PComponentSymbol | undefined;
 		if(ptype.outerType)
@@ -442,7 +442,7 @@ export class PUtils
 			return PUtils.resolveComponentSync(ctx, t, ptype.name);
 	}
 
-	public static resolveComponentSync<T extends PComponentSymbol, Args extends unknown[]>(ctx: IScopedSymbol, t: SymbolConstructor<T, Args>, name?:string): T | undefined
+	public static resolveComponentSync<T extends PComponentSymbol, Args extends unknown[]>(ctx: PIScopedSymbol, t: SymbolConstructor<T, Args>, name?:string): T | undefined
 	{
         //let result : T | undefined;
 

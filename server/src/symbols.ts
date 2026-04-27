@@ -2,6 +2,7 @@ import { ProcessingParserVisitor } from './grammer/ProcessingParserVisitor';
 import { AbstractParseTreeVisitor, ParseTree, TerminalNode } from 'antlr4ts/tree'
 import { PdeContentInfo } from "./sketch";
 import * as symb from 'antlr4-c3'
+import { PIScopedSymbol } from './antlr-sym';
 import * as pp from './grammer/ProcessingParser';
 import * as log from './syslogs'
 import * as psymb from "./antlr-sym"
@@ -812,7 +813,7 @@ export class SymbolTableVisitor extends AbstractParseTreeVisitor<void> implement
 		relatedSymbol.pdeName = pdeName;
 	}
 
-	tryFixComponentTypeIfGeneric(type:psymb.IPType, scope : symb.IScopedSymbol)
+	tryFixComponentTypeIfGeneric(type:psymb.IPType, scope : PIScopedSymbol)
 	{
 		if(type==null)
 			return;

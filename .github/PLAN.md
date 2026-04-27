@@ -13,6 +13,22 @@
 
 ---
 
+
+## **Build/Compile Cleanliness Enforcement**
+
+**Step 0 (before any phase/step):**
+- Run `npx tsc --noEmit` and all per-workspace builds (see Validation below).
+- If any errors are found, STOP and fix them before starting the step.
+- Only proceed when all workspaces build with 0 errors.
+
+**After each step:**
+- Run the same build/compile checks again.
+- If errors are found, STOP and fix them before marking the step complete or updating progress.
+
+**This rule applies to every phase and step in this plan.**
+
+---
+
 ## Phase 1: Finish Unification & Cleanup
 
 **Goal**: Single entry point activating both client (LSP) and debugger. All workspaces compile. Dependencies cleaned up. Extension loads in dev host.
