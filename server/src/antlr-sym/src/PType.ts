@@ -1,6 +1,5 @@
 
 import { 
-    TypeKind,
     ReferenceKind,
 } from "antlr4-c3";
 
@@ -124,7 +123,6 @@ export class PType implements IPType
     extendType : PType | undefined;
     implementTypes!: PType[];
     outerType : PType | undefined;
-	kind : TypeKind = TypeKind.Unknown;
     typeKind!: PTypeKind;
     reference!: ReferenceKind;
 
@@ -166,7 +164,6 @@ export class PType implements IPType
         this.name = name;
         this.reference = ReferenceKind.Reference;
         this.typeKind =  kind;
-        this.kind = TypeKind.Unknown;
         this.extendType = undefined;
         this.arrayType = undefined;
         this.primitiveKind = undefined;
