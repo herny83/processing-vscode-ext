@@ -28,13 +28,13 @@ export enum PTypeKind
 
 export interface IPType //extends Type
 {
-    name:string;
+    name: string;
+    baseTypes: PType[];
     genericTypes: PType[];
-    outerType : PType | undefined;
+    outerType: PType | undefined;
     extendType: PType | undefined;
     implementTypes: PType[];
     arrayType: PType | undefined;
-
     typeKind: PTypeKind;
     reference: ReferenceKind;
 }
@@ -117,11 +117,12 @@ const defaultNullName = "null"
 // =======================================================================================
 export class PType implements IPType 
 {
-    public static getPrimitiveTypeName(kind:PPrimitiveKind) { return primitiveKindNames[kind]; }
+	public static getPrimitiveTypeName(kind:PPrimitiveKind) { return primitiveKindNames[kind]; }
 	public static isDefaultObjectPath(path: string) {return path == defaultObjectClass || path == "Object"; }
 	public static isDefaultStringPath(path: string) {return path == defaultStringClass; }
     
     name!: string;
+    baseTypes: PType[] = [];
     genericTypes!: PType[];
     extendType : PType | undefined;
     implementTypes!: PType[];
@@ -135,9 +136,10 @@ export class PType implements IPType
     isFullPath : boolean = false;
 
     constructor(kind : PTypeKind, name: string )
-	{
+    {
         this.reset(kind, name);
-	}
+        this.baseTypes = [];
+    }
 
     public static isComponentType(type:IPType) : boolean { return PType.checkIsAnyTypeKind(type, componentTypes); }
 
@@ -165,17 +167,18 @@ export class PType implements IPType
 
     public reset(kind : PTypeKind, name: string)
     {
-		this.name = name;
-		this.reference = ReferenceKind.Reference;
-		this.typeKind =  kind;
+        this.name = name;
+        this.reference = ReferenceKind.Reference;
+        this.typeKind =  kind;
         this.kind = TypeKind.Unknown;
         this.extendType = undefined;
         this.arrayType = undefined;
         this.primitiveKind = undefined;
         this.isFullPath = (name.indexOf('/')>=0);
         this.outerType = undefined;
-        this.genericTypes = []; 
+        this.genericTypes = [];
         this.implementTypes = [];
+        this.baseTypes = [];
     }
 
     public getFullName() : String
