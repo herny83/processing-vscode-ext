@@ -1,8 +1,7 @@
 
 import { 
-	Type, 
-	TypeKind,
-	ReferenceKind,
+    TypeKind,
+    ReferenceKind,
 } from "antlr4-c3";
 
 /** Rough categorization of a type. */
@@ -26,10 +25,9 @@ export enum PTypeKind
     Generic = 15,
 }
 
-export interface IPType //extends Type
+export interface IPType
 {
     name: string;
-    baseTypes: PType[];
     genericTypes: PType[];
     outerType: PType | undefined;
     extendType: PType | undefined;
@@ -122,7 +120,6 @@ export class PType implements IPType
 	public static isDefaultStringPath(path: string) {return path == defaultStringClass; }
     
     name!: string;
-    baseTypes: PType[] = [];
     genericTypes!: PType[];
     extendType : PType | undefined;
     implementTypes!: PType[];
@@ -138,7 +135,6 @@ export class PType implements IPType
     constructor(kind : PTypeKind, name: string )
     {
         this.reset(kind, name);
-        this.baseTypes = [];
     }
 
     public static isComponentType(type:IPType) : boolean { return PType.checkIsAnyTypeKind(type, componentTypes); }
@@ -178,7 +174,6 @@ export class PType implements IPType
         this.outerType = undefined;
         this.genericTypes = [];
         this.implementTypes = [];
-        this.baseTypes = [];
     }
 
     public getFullName() : String

@@ -12,7 +12,6 @@ export class PComponentSymbol extends PScopedSymbol implements IPType
 	
 	
 	// Required by IPType
-	get baseTypes(): PType[] { return []; }
 	get arrayType(): PType | undefined { return undefined; }
 	get extendType(): PType | undefined { return this.extends; }
 	get implementTypes(): PType[] { return []; }
