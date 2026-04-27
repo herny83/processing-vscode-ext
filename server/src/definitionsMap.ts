@@ -5,6 +5,7 @@ import { PdeContentInfo } from "./sketch";
 import { Token } from 'antlr4ts'
 import { Range } from 'vscode-languageserver'
 import * as symb from 'antlr4-c3'
+import { PReferenceKind } from './antlr-sym';
 import { PIScopedSymbol } from './antlr-sym';
 import * as pp from './grammer/ProcessingParser';
 import * as parseUtils from './astutils'
@@ -993,7 +994,7 @@ export class UsageVisitor extends AbstractParseTreeVisitor<psymb.IPType | undefi
 		{
 			let result = this.findFirstClassOrInterfaceUp(currentScope)
 			this.pdeInfo.registerDefinition(thisCtx, result);
-			return psymb.PUtils.ComponentSymbolToPType(result).setReference(symb.ReferenceKind.Instance);
+			   return psymb.PUtils.ComponentSymbolToPType(result).setReference(PReferenceKind.Instance);
 		}
 		if(superExpr)
 		{
@@ -1472,7 +1473,7 @@ export class UsageVisitor extends AbstractParseTreeVisitor<psymb.IPType | undefi
 		let res : symb.BaseSymbol | undefined = scope.resolveSync(name);
 		if(res instanceof psymb.PVariableSymbol && res.type)
 		{
-			if( res.type.reference == symb.ReferenceKind.Reference )
+			   if( res.type.reference == PReferenceKind.Reference )
 				res = scope.resolveSync(res.type.name);
 		}
 		return res;

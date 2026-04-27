@@ -6,6 +6,7 @@ import * as parser from './parser'
 import { ParseTree, TerminalNode } from 'antlr4ts/tree'
 import { ProcessingParser, MethodCallContext } from './grammer/ProcessingParser';
 import * as symb from 'antlr4-c3'
+import { PReferenceKind, IPType } from './antlr-sym';
 import * as psymb from './antlr-sym'
 
 
@@ -70,7 +71,7 @@ for(let i = ProcessingParser.IDENTIFIER; i <= ProcessingParser.RULE_hexColorLite
 let lastPdeInfo : sketch.PdeContentInfo | undefined;
 let lastParseNodeAtPos : ParseTree | null;
 let lastScopeAtPos : symb.ScopedSymbol | undefined;
-let lastContextType : psymb.IPType | undefined;
+let lastContextType : IPType | undefined;
 let lastSymbols : symb.BaseSymbol [] = [];
 
 export async function collectSignatureHelp(pdeInfo: sketch.PdeContentInfo, line: number, posInLine : number, context : lsp.SignatureHelpContext): Promise<lsp.SignatureHelp | null> 
@@ -112,7 +113,7 @@ export async function collectSignatureHelp(pdeInfo: sketch.PdeContentInfo, line:
 		let methods = psymb.PUtils.getAllSymbolsSync(callContext, psymb.PMethodSymbol, methodName, true );
 		for(let method of methods )
 		{
-			if(contextType.reference == symb.ReferenceKind.Reference && !method.modifiers.has(symb.Modifier.Static))
+			   if(contextType.reference == PReferenceKind.Reference && !method.modifiers.has(symb.Modifier.Static))
 				continue;
 
 			const parameters: lsp.ParameterInformation[] = [];
@@ -239,7 +240,7 @@ export async function collectCandidates(pdeInfo: sketch.PdeContentInfo, line: nu
 	return completions;
 }
 
-async function suggestMembers(scopeAtPos: symb.ScopedSymbol, refType:psymb.IPType|undefined, localOnly:boolean=false, symbols: symb.BaseSymbol[], line:number, charPos:number) : Promise<lsp.CompletionItem[]>
+async function suggestMembers(scopeAtPos: symb.ScopedSymbol, refType:IPType|undefined, localOnly:boolean=false, symbols: symb.BaseSymbol[], line:number, charPos:number) : Promise<lsp.CompletionItem[]>
 {
 	let completions : lsp.CompletionItem[] = [];
 
@@ -248,8 +249,8 @@ async function suggestMembers(scopeAtPos: symb.ScopedSymbol, refType:psymb.IPTyp
 
 	if(refType)
 	{
-		isAccessingByReference = refType.reference == symb.ReferenceKind.Reference;
-		isAccessingByInstance = refType.reference == symb.ReferenceKind.Instance;
+		isAccessingByReference = refType.reference == PReferenceKind.Reference;
+		isAccessingByInstance = refType.reference == PReferenceKind.Instance;
 	}
 
 	let vars = psymb.PUtils.getAllSymbolsSync(scopeAtPos, psymb.PVariableSymbol, undefined, localOnly);

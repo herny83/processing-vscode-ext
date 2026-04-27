@@ -1,9 +1,6 @@
-import {
-	ReferenceKind,
-	TypeKind,
-} from "antlr4-c3";
+import { PReferenceKind } from "./PReferenceKind";
 import { PScopedSymbol } from "./PScopedSymbol";
-import { IPType, PType, PTypeKind } from "./PType"
+import { IPType, PType, PTypeKind } from "./PType";
 
 export class PComponentSymbol extends PScopedSymbol implements IPType
 {
@@ -16,10 +13,9 @@ export class PComponentSymbol extends PScopedSymbol implements IPType
 	get extendType(): PType | undefined { return this.extends; }
 	get implementTypes(): PType[] { return []; }
 	get genericTypes(): PType[] { return this.generics; }
-	get kind() { return TypeKind.Unknown; }
 	get outerType(): PType | undefined { return undefined; }
 	get typeKind() { return PTypeKind.Component; }
-	get reference() { return ReferenceKind.Reference; }
+	get reference() { return PReferenceKind.Reference; } // Reference to PReferenceKind
 
 	constructor(name: string, ext?:PType|undefined)
 	{

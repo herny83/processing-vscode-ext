@@ -18,7 +18,7 @@ After completing a step:
 
 **Date**: April 27, 2026
 **Completed**:
-- 2.1.5: Translated VariableSymbol to PVariableSymbol, updated all references, validated all builds (0 errors)
+- 2.1.9:  (0 errors)
 - See PLAN.md for next step
 
 **Next step**: 2.1.7 — Translate Type to new antlr-sym PTypeBase.ts and update all references
@@ -61,7 +61,7 @@ Work that came up between Phase 1 completion and starting Phase 2. Not part of a
 - [x] **2.1.6** Translate SymbolConstructor to new antlr-sym PSymbolConstructor.ts and update all references — 2026-04-27: Created PSymbolConstructor wrapper, updated all references, fixed type constraints, validated all builds (0 errors)
 - [x] **2.1.7** Translate Type to new antlr-sym PType (reused existing PType, added baseTypes property to match interface, no new wrapper needed) — 2026-04-27: Confirmed PType fulfills Type interface, added baseTypes, validated all builds (0 errors)
 - [x] **2.1.8** Translate TypeKind to new antlr-sym PTypeKind.ts and update all references
-- [ ] **2.1.9** Translate ReferenceKind to new antlr-sym PReferenceKind.ts and update all references
+- [x] **2.1.9** Translate ReferenceKind to new antlr-sym PReferenceKind.ts and update all references
 - [ ] **2.1.10** Translate MethodFlags to new antlr-sym PMethodFlags.ts and update all references
 - [ ] **2.1.11** Translate Modifier to new antlr-sym PModifier.ts and update all references
 - [ ] **2.1.12** Translate INamespaceSymbol to new antlr-sym PINamespaceSymbol.ts and update all references

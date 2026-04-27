@@ -1,7 +1,5 @@
 
-import { 
-    ReferenceKind,
-} from "antlr4-c3";
+import { PReferenceKind } from "./PReferenceKind";
 
 /** Rough categorization of a type. */
 export enum PTypeKind 
@@ -33,7 +31,7 @@ export interface IPType
     implementTypes: PType[];
     arrayType: PType | undefined;
     typeKind: PTypeKind;
-    reference: ReferenceKind;
+    reference: PReferenceKind;
 }
 
 export enum PPrimitiveKind {
@@ -124,7 +122,7 @@ export class PType implements IPType
     implementTypes!: PType[];
     outerType : PType | undefined;
     typeKind!: PTypeKind;
-    reference!: ReferenceKind;
+    reference!: PReferenceKind;
 
     arrayType: PType | undefined;
     primitiveKind : PPrimitiveKind | undefined;
@@ -162,7 +160,7 @@ export class PType implements IPType
     public reset(kind : PTypeKind, name: string)
     {
         this.name = name;
-        this.reference = ReferenceKind.Reference;
+        this.reference = PReferenceKind.Reference;
         this.typeKind =  kind;
         this.extendType = undefined;
         this.arrayType = undefined;
@@ -185,7 +183,7 @@ export class PType implements IPType
 
     public setOutter(outter:PType|undefined) : PType { this.outerType = outter; return this; }
 
-    public setReference(refType:ReferenceKind) : PType { this.reference = refType; return this; }
+    public setReference(refType:PReferenceKind) : PType { this.reference = refType; return this; }
 
     public setExtend(extType: PType|undefined) : PType { this.extendType = extType; return this; }
 
@@ -239,7 +237,7 @@ export class PType implements IPType
 
 	public static createArrayType(baseType:PType) : PType { return new PType(PTypeKind.Array, "Array").setArrayType(baseType);}
 
-	public static createVoidType() : PType { return new PType(PTypeKind.Void, "void").setReference(ReferenceKind.Irrelevant); }
+    public static createVoidType() : PType { return new PType(PTypeKind.Void, "void").setReference(PReferenceKind.Irrelevant); }
 
 	public static createEnumType(typeName:string) : PType { return new PType(PTypeKind.Enum, typeName).setExtend(PType.createEnumBaseClass(typeName));}
 

@@ -1,8 +1,5 @@
-import {
-	ReferenceKind,
-	MethodFlags,
-	Modifier,
-} from "antlr4-c3";
+import { MethodFlags, Modifier } from "antlr4-c3";
+import { PReferenceKind } from "./PReferenceKind";
 import { PSymbolConstructor } from "./PSymbolConstructor";
 
 import { PBaseSymbol } from "./PBaseSymbol";
@@ -136,7 +133,7 @@ export class PUtils
 
 	public static cloneTypeAsInstance(type: PType) : PType
 	{
-		return PType.createClone(type).setReference(ReferenceKind.Instance);
+		return PType.createClone(type).setReference(PReferenceKind.Instance);
 	}
 
 	public static ComponentSymbolToPType(comp: PComponentSymbol | undefined) : PType

@@ -2,6 +2,7 @@ import { ClassVisitor, Opcodes } from "@xmcl/asm"
 import { SignatureReader }  from './grammer/SignatureReader'
 import { SignatureVisitor }  from './grammer/SignatureVisitor'
 import * as symb from 'antlr4-c3'
+import { PReferenceKind } from './antlr-sym';
 import * as psymb from "./antlr-sym"
 
 let debugSignature : string="";
@@ -243,7 +244,7 @@ class ClassSignatureVisitor extends DebugSignatureVisitor
 	{
 		let formalType = psymb.PType.createObjectType();
 		formalType.typeKind = psymb.PTypeKind.Class;
-		formalType.reference = symb.ReferenceKind.Reference;
+		formalType.reference = PReferenceKind.Reference;
 		if(this.formalTypes)
 			this.formalTypes.push(formalType);
 		return new TypeSignatureVisitor(formalType);
@@ -252,7 +253,7 @@ class ClassSignatureVisitor extends DebugSignatureVisitor
 	{
 		let formalType = psymb.PType.createUnknownType();
 		formalType.typeKind = psymb.PTypeKind.Interface;
-		formalType.reference = symb.ReferenceKind.Reference;
+		formalType.reference = PReferenceKind.Reference;
 		if(this.formalTypes)
 			this.formalTypes.push(formalType);
 		return new TypeSignatureVisitor(formalType);
@@ -303,7 +304,7 @@ class MethodSignatureVisitor extends DebugSignatureVisitor
 	{
 		let formalType = psymb.PType.createObjectType();
 		formalType.typeKind = psymb.PTypeKind.Class;
-		formalType.reference = symb.ReferenceKind.Reference;
+		formalType.reference = PReferenceKind.Reference;
 		if(this.formalTypes)
 			this.formalTypes.push(formalType);
 		return new TypeSignatureVisitor(formalType);
@@ -312,7 +313,7 @@ class MethodSignatureVisitor extends DebugSignatureVisitor
 	{
 		let formalType = psymb.PType.createObjectType();
 		formalType.typeKind = psymb.PTypeKind.Interface;
-		formalType.reference = symb.ReferenceKind.Reference;
+		formalType.reference = PReferenceKind.Reference;
 		if(this.formalTypes)
 			this.formalTypes.push(formalType);
 		return new TypeSignatureVisitor(formalType);
@@ -363,7 +364,7 @@ class TypeSignatureVisitor extends DebugSignatureVisitor
 		// Link the inner type to the current type as its outerType
 		newOutterType.typeKind = psymb.PTypeKind.Component;
 		this.targetType.outerType = newOutterType;
-		this.targetType.reference = symb.ReferenceKind.Reference;
+		this.targetType.reference = PReferenceKind.Reference;
 	}
 
 	public visitSuperclass(): SignatureVisitor { return this; }
@@ -387,7 +388,7 @@ class TypeSignatureVisitor extends DebugSignatureVisitor
 			this.targetType.name = innerClassesList[innerClassesList.length-1];
 			if(this.targetType.typeKind == psymb.PTypeKind.Unknown)
 				this.targetType.typeKind = psymb.PTypeKind.Component;
-			this.targetType.reference = symb.ReferenceKind.Reference;
+			this.targetType.reference = PReferenceKind.Reference;
 		}
 		else
 		{
@@ -395,7 +396,7 @@ class TypeSignatureVisitor extends DebugSignatureVisitor
 			this.targetType.name = componentName;
 			if(this.targetType.typeKind == psymb.PTypeKind.Unknown)
 				this.targetType.typeKind = psymb.PTypeKind.Component;
-			this.targetType.reference = symb.ReferenceKind.Reference;
+			this.targetType.reference = PReferenceKind.Reference;
 		}
 	}
 
@@ -404,7 +405,7 @@ class TypeSignatureVisitor extends DebugSignatureVisitor
 		let baseType =  psymb.PType.createUnknownType();
 		baseType.name="?";
 		baseType.typeKind = psymb.PTypeKind.GenericDecl;
-		baseType.reference = symb.ReferenceKind.Reference;
+		baseType.reference = PReferenceKind.Reference;
 		this.targetType.genericTypes.push(baseType);
 	}
 	public visitTypeArgument(wildcard:string) : SignatureVisitor 
@@ -421,7 +422,7 @@ class TypeSignatureVisitor extends DebugSignatureVisitor
 
 		this.targetType.name = fixedName;
 		this.targetType.typeKind = psymb.PTypeKind.Generic;
-		this.targetType.reference = symb.ReferenceKind.Reference;
+		this.targetType.reference = PReferenceKind.Reference;
 	}
 
 	public visitArrayType(): SignatureVisitor 
