@@ -13,18 +13,17 @@ After completing a step:
 ---
 
 
+
 ## Last Session
 
-**Date**: April 26, 2026
-**Completed** (interim infrastructure cleanups, not numbered phase work):
-- Module-resolution migration `node` → `bundler` and `commonjs` → `esnext` across all 6 tsconfigs; fixed `this`-binding crashes in `references.ts`/`rename.ts`; removed dead `program` field from debuggers contribution (d7f76f7)
-- Enabled `strict: true` on `client` + `debugger` tsconfigs after fixing 10 strict-mode errors (ed4f717)
-- Added Copilot tooling: `code-reviewer` agent + `review-changes`/`wrap-up` prompts (a91aad1, d45fe97)
-- Expanded Phase 2 in PLAN.md with 4-track structure (isolation + strict cleanup, parallelized)
+**Date**: April 27, 2026
+**Completed**:
+- 2.1.5: Translated VariableSymbol to PVariableSymbol, updated all references, validated all builds (0 errors)
+- See PLAN.md for next step
 
-**Next step**: 2.1 — Create antlr4ts shim (server/src/antlr-types.ts)
+**Next step**: 2.1.6 — Translate SymbolConstructor to new antlr-sym PSymbolConstructor.ts and update all references
 **Error count**: 0 baseline build; 143 strict-mode errors remaining (all in server: 106 top-level + 37 in antlr-sym/)
-**Notes**: Client + debugger workspaces now strict-clean. Server is the entire remaining strict backlog. Phase 2 Tracks A and B are parallelizable on disjoint file sets.
+**Notes**: All workspaces build clean. Continue Track A with next symbol wrapper.
 
 ---
 
@@ -51,13 +50,14 @@ Work that came up between Phase 1 completion and starting Phase 2. Not part of a
 
 > Four tracks. A + B run in parallel (disjoint file sets). C waits for A + B. D is the lock-in gate. See [PLAN.md](PLAN.md) for full per-step detail.
 
+
 ### Track A: antlr4-c3 Processing Symbol Wrappers
 
 - [x] **2.1.1** Translate BaseSymbol to new antlr-sym PBaseSymbol.ts and update all references — 2026-04-26: All references updated to use PBaseSymbol wrapper (thin subclass of antlr4-c3 BaseSymbol), imports fixed, no errors
 - [x] **2.1.2** Translate ScopedSymbol to new antlr-sym PScopedSymbol.ts and update all references — 2026-04-27: All references updated to use PScopedSymbol wrapper, imports and types fixed, no errors
 - [x] **2.1.3** Translate SymbolTable to new antlr-sym PSymbolTableBase.ts and update all references
 - [x] **2.1.4** Translate IScopedSymbol to new antlr-sym PIScopedSymbol.ts and update all references — 2026-04-27: Created PIScopedSymbol wrapper, updated all references and imports, validated 0 errors
-- [ ] **2.1.5** Translate VariableSymbol to new antlr-sym PVariableSymbol.ts and update all references
+- [x] **2.1.5** Translate VariableSymbol to new antlr-sym PVariableSymbol.ts and update all references — 2026-04-27: Created PVariableSymbol wrapper, updated all references, validated all builds (0 errors)
 - [ ] **2.1.6** Translate SymbolConstructor to new antlr-sym PSymbolConstructor.ts and update all references
 - [ ] **2.1.7** Translate Type to new antlr-sym PTypeBase.ts and update all references
 - [ ] **2.1.8** Translate TypeKind to new antlr-sym PTypeKindBase.ts and update all references
