@@ -88,12 +88,14 @@ npx vsce package       # Package as .vsix
 - **Debugger line mapping**: `debugger/src/sketch.ts` converts PDE lines to Java lines and back
 - **Processing path detection**: `client/src/extension.ts` resolves Processing installation per platform
 
+
 ## Master Plan & Progress
 
 All work follows the phased plan in [PLAN.md](PLAN.md). Progress is tracked in [PROGRESS.md](PROGRESS.md).
 
 - **At session start**: Read `PROGRESS.md` to know where to resume.
-- **After completing a step**: Update `PROGRESS.md` (check off item, update "Last Session" section).
+- **After completing a step**: Only update `PROGRESS.md` if all builds and type-checks pass. This update is the last part of the step work.
+- **Do not commit automatically**: After updating `PROGRESS.md`, instruct the user to review and commit the changes, then proceed to the next step.
 - **Use `/continue-plan`** to automatically resume from where the last session left off.
 - **Never skip steps** — they are ordered by dependency.
 
