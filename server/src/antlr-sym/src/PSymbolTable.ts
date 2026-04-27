@@ -1,4 +1,4 @@
-import { SymbolConstructor } from "antlr4-c3";
+import { PSymbolConstructor } from "./PSymbolConstructor";
 import { PSymbolTableBase } from "./PSymbolTableBase";
 import { PBaseSymbol } from "./PBaseSymbol";
 import { PNamespaceSymbol } from "./PNamespaceSymbol"
@@ -49,7 +49,7 @@ export class PSymbolTable extends PSymbolTableBase
 		this.importTable.clear();
 	}
 
-	public resolveImportTableComponent<T extends PBaseSymbol, Args extends unknown[]>(t: SymbolConstructor<T, Args>, importPath : string | undefined) : T | undefined
+	public resolveImportTableComponent<T extends PBaseSymbol, Args extends unknown[]>(t: PSymbolConstructor<T, Args>, importPath : string | undefined) : T | undefined
 	{
 		if(importPath === undefined)
 			return undefined;

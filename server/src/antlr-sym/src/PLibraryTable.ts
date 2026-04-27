@@ -1,4 +1,4 @@
-import { SymbolConstructor } from "antlr4-c3";
+import { PSymbolConstructor } from "./PSymbolConstructor";
 import { PSymbolTableBase } from "./PSymbolTableBase";
 import { PScopedSymbol } from "./PScopedSymbol";
 import { PBaseSymbol } from "./PBaseSymbol";
@@ -37,7 +37,7 @@ export class PLibraryTable extends PSymbolTableBase
         return currentParent;
 	}
 
-	resolveComponent<T extends PComponentSymbol, Args extends unknown[]>(t: SymbolConstructor<T, Args>, name:string) : T | undefined
+	resolveComponent<T extends PComponentSymbol, Args extends unknown[]>(t: PSymbolConstructor<T, Args>, name:string) : T | undefined
 	{
 		if(name.indexOf('.')>=0)
 		{

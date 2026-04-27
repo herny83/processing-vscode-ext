@@ -21,7 +21,7 @@ After completing a step:
 - 2.1.5: Translated VariableSymbol to PVariableSymbol, updated all references, validated all builds (0 errors)
 - See PLAN.md for next step
 
-**Next step**: 2.1.6 — Translate SymbolConstructor to new antlr-sym PSymbolConstructor.ts and update all references
+**Next step**: 2.1.7 — Translate Type to new antlr-sym PTypeBase.ts and update all references
 **Error count**: 0 baseline build; 143 strict-mode errors remaining (all in server: 106 top-level + 37 in antlr-sym/)
 **Notes**: All workspaces build clean. Continue Track A with next symbol wrapper.
 
@@ -58,7 +58,7 @@ Work that came up between Phase 1 completion and starting Phase 2. Not part of a
 - [x] **2.1.3** Translate SymbolTable to new antlr-sym PSymbolTableBase.ts and update all references
 - [x] **2.1.4** Translate IScopedSymbol to new antlr-sym PIScopedSymbol.ts and update all references — 2026-04-27: Created PIScopedSymbol wrapper, updated all references and imports, validated 0 errors
 - [x] **2.1.5** Translate VariableSymbol to new antlr-sym PVariableSymbol.ts and update all references — 2026-04-27: Created PVariableSymbol wrapper, updated all references, validated all builds (0 errors)
-- [ ] **2.1.6** Translate SymbolConstructor to new antlr-sym PSymbolConstructor.ts and update all references
+- [x] **2.1.6** Translate SymbolConstructor to new antlr-sym PSymbolConstructor.ts and update all references — 2026-04-27: Created PSymbolConstructor wrapper, updated all references, fixed type constraints, validated all builds (0 errors)
 - [ ] **2.1.7** Translate Type to new antlr-sym PTypeBase.ts and update all references
 - [ ] **2.1.8** Translate TypeKind to new antlr-sym PTypeKindBase.ts and update all references
 - [ ] **2.1.9** Translate ReferenceKind to new antlr-sym PReferenceKind.ts and update all references

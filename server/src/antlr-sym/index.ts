@@ -17,3 +17,4 @@ export * from "./src/PUtils";
 export * from "./src/PThrowsSymbol";
 export * from "./src/PBaseSymbol";
 export * from "./src/PIScopedSymbol";
+export * from "./src/PSymbolConstructor";

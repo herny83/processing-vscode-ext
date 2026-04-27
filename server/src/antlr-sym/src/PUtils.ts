@@ -1,9 +1,9 @@
 import {
 	ReferenceKind,
-	SymbolConstructor,
 	MethodFlags,
 	Modifier,
 } from "antlr4-c3";
+import { PSymbolConstructor } from "./PSymbolConstructor";
 
 import { PBaseSymbol } from "./PBaseSymbol";
 import { PScopedSymbol } from "./PScopedSymbol";
@@ -194,7 +194,7 @@ export class PUtils
 		return (symbolName == name);
 	}
 
-	public static getAllSymbolsSync<T extends PBaseSymbol, Args extends unknown[]>(ctx: PIScopedSymbol, t: SymbolConstructor<T, Args>, name?:string, localOnly?: boolean, overridesAlso:boolean=false): T[]
+	public static getAllSymbolsSync<T extends PBaseSymbol, Args extends unknown[]>(ctx: PIScopedSymbol, t: PSymbolConstructor<T, Args>, name?:string, localOnly?: boolean, overridesAlso:boolean=false): T[]
 	{
         const results = [];
 
@@ -264,12 +264,12 @@ export class PUtils
 		return signature.substring(0, nameEndIndex);
 	}
 
-	public static resolveChildSymbolSync<T extends PBaseSymbol, Args extends unknown[]>(ctx: PIScopedSymbol, t: SymbolConstructor<T, Args>, name?:string): T | undefined
+	public static resolveChildSymbolSync<T extends PBaseSymbol, Args extends unknown[]>(ctx: PIScopedSymbol, t: PSymbolConstructor<T, Args>, name?:string): T | undefined
 	{
 		return PUtils.resolveSymbolMatchSync(ctx.children, t, name);
 	}
 
-	public static resolveSymbolMatchSync<T extends PBaseSymbol, Args extends unknown[]>(lst: PBaseSymbol[], t: SymbolConstructor<T, Args>, name?:string): T | undefined
+	public static resolveSymbolMatchSync<T extends PBaseSymbol, Args extends unknown[]>(lst: PBaseSymbol[], t: PSymbolConstructor<T, Args>, name?:string): T | undefined
 	{
 		let result : T | undefined;
 		for (const child of lst)
@@ -285,12 +285,12 @@ export class PUtils
 		return result;
 	}
 
-	public static getAllDirectChildrenMatchSync<T extends PBaseSymbol, Args extends unknown[]>(ctx: PIScopedSymbol, t: SymbolConstructor<T, Args>, name?:string): T[]
+	public static getAllDirectChildrenMatchSync<T extends PBaseSymbol, Args extends unknown[]>(ctx: PIScopedSymbol, t: PSymbolConstructor<T, Args>, name?:string): T[]
 	{
 		return PUtils.getAllMatchsSync(ctx.children, t, name);
 	}
 
-	public static getAllMatchsSync<T extends PBaseSymbol, Args extends unknown[]>(list: PBaseSymbol[], t: SymbolConstructor<T, Args>, name?:string): T[]
+	public static getAllMatchsSync<T extends PBaseSymbol, Args extends unknown[]>(list: PBaseSymbol[], t: PSymbolConstructor<T, Args>, name?:string): T[]
 	{
 		let result : T[] = [];
 		const compareFullSignature = name && name.indexOf('(') >= 0;
@@ -320,7 +320,7 @@ export class PUtils
 		return fullname;
 	}
 
-	public static resolveSymbolSync<T extends PBaseSymbol, Args extends unknown[]>(ctx: PBaseSymbol, t: SymbolConstructor<T, Args>, name?:string, localOnly?: boolean): T | undefined
+	public static resolveSymbolSync<T extends PBaseSymbol, Args extends unknown[]>(ctx: PBaseSymbol, t: PSymbolConstructor<T, Args>, name?:string, localOnly?: boolean): T | undefined
 	{
         let result : T | undefined;
 
@@ -418,7 +418,7 @@ export class PUtils
 		return result;
 	}
 
-	public static resolveSymbolSyncFromPType<T extends PBaseSymbol, Args extends unknown[]>(ctx: PIScopedSymbol, t: SymbolConstructor<T, Args>, ptype:IPType): T | undefined
+	public static resolveSymbolSyncFromPType<T extends PBaseSymbol, Args extends unknown[]>(ctx: PIScopedSymbol, t: PSymbolConstructor<T, Args>, ptype:IPType): T | undefined
 	{
 		let outter : PComponentSymbol | undefined;
 		if(ptype.outerType)
@@ -430,7 +430,7 @@ export class PUtils
 			return PUtils.resolveSymbolSync(ctx, t, ptype.name);
 	}
 
-	public static resolveComponentSyncFromPType<T extends PComponentSymbol, Args extends unknown[]>(ctx: PIScopedSymbol, t: SymbolConstructor<T, Args>, ptype:IPType): T | undefined
+	public static resolveComponentSyncFromPType<T extends PComponentSymbol, Args extends unknown[]>(ctx: PIScopedSymbol, t: PSymbolConstructor<T, Args>, ptype:IPType): T | undefined
 	{
 		let outter : PComponentSymbol | undefined;
 		if(ptype.outerType)
@@ -442,7 +442,7 @@ export class PUtils
 			return PUtils.resolveComponentSync(ctx, t, ptype.name);
 	}
 
-	public static resolveComponentSync<T extends PComponentSymbol, Args extends unknown[]>(ctx: PIScopedSymbol, t: SymbolConstructor<T, Args>, name?:string): T | undefined
+	public static resolveComponentSync<T extends PComponentSymbol, Args extends unknown[]>(ctx: PIScopedSymbol, t: PSymbolConstructor<T, Args>, name?:string): T | undefined
 	{
         //let result : T | undefined;
 
@@ -513,7 +513,7 @@ export class PUtils
 		return callContext;
 	}
 
-	public static getFirstParentMatch<T extends PBaseSymbol, Args extends unknown[]>(t: SymbolConstructor<T, Args>, ctx: PBaseSymbol): T | undefined
+	public static getFirstParentMatch<T extends PBaseSymbol, Args extends unknown[]>(t: PSymbolConstructor<T, Args>, ctx: PBaseSymbol): T | undefined
 	{
 		if (!ctx.parent)
 			return;
