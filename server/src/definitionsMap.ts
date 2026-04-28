@@ -62,7 +62,7 @@ export class UsageVisitor extends AbstractParseTreeVisitor<psymb.IPType | undefi
 		let extendsCtx = ctx.typeType();
 		let implemCtx =ctx.typeList();
 
-		let currentScope : symb.ScopedSymbol = this.findScopeAtToken(ctx.start);
+		let currentScope : psymb.PScopedSymbol = this.findScopeAtToken(ctx.start);
 		let classSymbol = psymb.PUtils.resolveComponentSync(currentScope, psymb.PClassSymbol, classIdentifier.text);
 		let classFullName : string = psymb.PUtils.extractSignature( classSymbol );// + (isInstance?"":"#");
 		this.pdeInfo?.registerDefinitionName(classIdentifier, classFullName, false);
@@ -117,7 +117,7 @@ export class UsageVisitor extends AbstractParseTreeVisitor<psymb.IPType | undefi
 	visitInterfaceDeclaration(ctx: pp.InterfaceDeclarationContext) : psymb.IPType | undefined
 	{
 		let identifier = ctx.IDENTIFIER();
-		let currentScope : symb.ScopedSymbol = this.findScopeAtToken(ctx.start);
+		let currentScope : psymb.PScopedSymbol = this.findScopeAtToken(ctx.start);
 		let interfSymbol = psymb.PUtils.resolveComponentSync(currentScope, psymb.PInterfaceSymbol, identifier.text);
 		if(interfSymbol !== undefined)
 		{
@@ -148,7 +148,7 @@ export class UsageVisitor extends AbstractParseTreeVisitor<psymb.IPType | undefi
 	{
 		let iteratorType = this.visitExpression(ctx.expression());
 		let typeTypeCtx = ctx.typeType();
-		let currentScope : symb.ScopedSymbol = this.findScopeAtToken(typeTypeCtx.start);
+		let currentScope : psymb.PScopedSymbol = this.findScopeAtToken(typeTypeCtx.start);
 		let context = this.registerUsageForTypeType(typeTypeCtx, currentScope);
 		let declIdCtx = ctx.variableDeclaratorId();
 		this.visitAndRegisterDeclaratorId(declIdCtx, currentScope);
@@ -186,7 +186,7 @@ export class UsageVisitor extends AbstractParseTreeVisitor<psymb.IPType | undefi
 
 	visitLocalVariableDeclaration(ctx: pp.LocalVariableDeclarationContext) : psymb.IPType | undefined 
 	{
-		let scope : symb.ScopedSymbol = this.findScopeAtToken(ctx.start);
+		let scope : psymb.PScopedSymbol = this.findScopeAtToken(ctx.start);
 		let typeTypeContext = ctx.typeType();
 		let callContext = this.registerUsageForTypeType(typeTypeContext, scope);
 		let declaratorsContext = ctx.variableDeclarators();
@@ -204,7 +204,7 @@ export class UsageVisitor extends AbstractParseTreeVisitor<psymb.IPType | undefi
 	visitFormalParameter(ctx: pp.FormalParameterContext) : psymb.IPType | undefined
 	{
 		let callContext = this.registerUsageForDeclarationType(ctx.typeType());
-		let scope : symb.ScopedSymbol = this.findScopeAtToken(ctx.start);
+		let scope : psymb.PScopedSymbol = this.findScopeAtToken(ctx.start);
 		this.visitAndRegisterDeclaratorId(ctx.variableDeclaratorId(), scope);
 		return callContext.type;
 	}
@@ -212,7 +212,7 @@ export class UsageVisitor extends AbstractParseTreeVisitor<psymb.IPType | undefi
 	visitFieldDeclaration(ctx: pp.FieldDeclarationContext) : psymb.IPType | undefined
 	{
 		let callContext = this.registerUsageForDeclarationType(ctx.typeType());
-		let scope : symb.ScopedSymbol = this.findScopeAtToken(ctx.start);
+		let scope : psymb.PScopedSymbol = this.findScopeAtToken(ctx.start);
 		let declaratorsContext = ctx.variableDeclarators();
 		this.visitAndRegisterDeclarators(declaratorsContext, scope);
 		return callContext.type;
@@ -222,7 +222,7 @@ export class UsageVisitor extends AbstractParseTreeVisitor<psymb.IPType | undefi
 	{
 		let methodIdentifier = ctx.IDENTIFIER();
 
-		let scope : symb.ScopedSymbol = this.findScopeAtToken(ctx.start);
+		let scope : psymb.PScopedSymbol = this.findScopeAtToken(ctx.start);
 		if(scope instanceof psymb.PMethodSymbol)
 			this.pdeInfo.registerDefinition(methodIdentifier, scope);
 
@@ -250,7 +250,7 @@ export class UsageVisitor extends AbstractParseTreeVisitor<psymb.IPType | undefi
 		if(returnTypeCtx)
 			callContext = this.registerUsageForDeclarationType(returnTypeCtx);
 
-		let scope : symb.ScopedSymbol = this.findScopeAtToken(ctx.start);
+		let scope : psymb.PScopedSymbol = this.findScopeAtToken(ctx.start);
 		if(scope instanceof psymb.PMethodSymbol)
 			this.pdeInfo.registerDefinition(methodIdentifier, scope);
 
@@ -298,7 +298,7 @@ export class UsageVisitor extends AbstractParseTreeVisitor<psymb.IPType | undefi
 			return;
 
 		let contextType : psymb.IPType | undefined;
-		let scopedSymbol : symb.ScopedSymbol | undefined;
+		let scopedSymbol : psymb.PScopedSymbol | undefined;
 		let localOnly : boolean = false;
 
 		for(let i:number=0; i < node.parent.childCount; i++ )
@@ -324,14 +324,14 @@ export class UsageVisitor extends AbstractParseTreeVisitor<psymb.IPType | undefi
 		}
 	}
 
-	visitAndRegisterDeclarators(declCtx : pp.VariableDeclaratorsContext, currentScope: symb.ScopedSymbol)
+	visitAndRegisterDeclarators(declCtx : pp.VariableDeclaratorsContext, currentScope: psymb.PScopedSymbol)
 	{
 		let declLst = declCtx.variableDeclarator();
 		for(let i=0; i < declLst.length; i++ )
 			this.visitAndRegisterDeclarator(declLst[i], currentScope);
 	}
 
-	visitAndRegisterDeclarator(declCtx : pp.VariableDeclaratorContext, currentScope: symb.ScopedSymbol)
+	visitAndRegisterDeclarator(declCtx : pp.VariableDeclaratorContext, currentScope: psymb.PScopedSymbol)
 	{
 		let declIdCtx = declCtx.variableDeclaratorId();
 		let initialCtx = declCtx.variableInitializer();
@@ -341,7 +341,7 @@ export class UsageVisitor extends AbstractParseTreeVisitor<psymb.IPType | undefi
 			this.visit(initialCtx);
 	}
 
-	visitAndRegisterDeclaratorId(declIdCtx : pp.VariableDeclaratorIdContext, currentScope : symb.ScopedSymbol)
+	visitAndRegisterDeclaratorId(declIdCtx : pp.VariableDeclaratorIdContext, currentScope : psymb.PScopedSymbol)
 	{
 		if(!declIdCtx)
 			return;
@@ -350,7 +350,7 @@ export class UsageVisitor extends AbstractParseTreeVisitor<psymb.IPType | undefi
 		this.pdeInfo.registerDefinition(varIdentifier, varSymbol);
 	}
 
-	visitAndRegisterEnum(ctx: pp.EnumDeclarationContext, currentScope : symb.ScopedSymbol) : psymb.IPType | undefined
+	visitAndRegisterEnum(ctx: pp.EnumDeclarationContext, currentScope : psymb.PScopedSymbol) : psymb.IPType | undefined
 	{
 		let enumID = ctx.IDENTIFIER();
 		let implCtx = ctx.typeList();
@@ -386,7 +386,7 @@ export class UsageVisitor extends AbstractParseTreeVisitor<psymb.IPType | undefi
 		return this.defaultResult();
 	}
 
-	visitAndRegisterSwithStatementGroup(ctx: pp.SwitchBlockStatementGroupContext, currentScope: symb.ScopedSymbol, switchType:psymb.IPType|undefined)
+	visitAndRegisterSwithStatementGroup(ctx: pp.SwitchBlockStatementGroupContext, currentScope: psymb.PScopedSymbol, switchType:psymb.IPType|undefined)
 	{
 		let switchLabel = ctx.switchLabel();
 		let blockStatement = ctx.blockStatement();
@@ -398,7 +398,7 @@ export class UsageVisitor extends AbstractParseTreeVisitor<psymb.IPType | undefi
 			this.visit(blockStatement[i]);
 	}
 
-	visitAndRegisterSwithLabel(ctx: pp.SwitchLabelContext, currentScope: symb.ScopedSymbol, switchType:psymb.IPType|undefined)  : psymb.PType
+	visitAndRegisterSwithLabel(ctx: pp.SwitchLabelContext, currentScope: psymb.PScopedSymbol, switchType:psymb.IPType|undefined)  : psymb.PType
 	{
 		if(ctx.DEFAULT())
 			return;
@@ -439,7 +439,7 @@ export class UsageVisitor extends AbstractParseTreeVisitor<psymb.IPType | undefi
 		}
 	}
 
-	visitAndRegisterEnumConstant(ctx: pp.SwitchLabelContext, currentScope: symb.ScopedSymbol, enumType:psymb.IPType|undefined)
+	visitAndRegisterEnumConstant(ctx: pp.SwitchLabelContext, currentScope: psymb.PScopedSymbol, enumType:psymb.IPType|undefined)
 	{
 		let enumMember : psymb.PEnumMemberSymbol | undefined;
 		if(enumType)
@@ -451,7 +451,7 @@ export class UsageVisitor extends AbstractParseTreeVisitor<psymb.IPType | undefi
 		this.pdeInfo.registerDefinition(ctx.IDENTIFIER(), enumMember );
 	}
 
-	visitAndRegisterExpression(ctx: pp.ExpressionContext, currentScope: symb.ScopedSymbol) : psymb.IPType | undefined
+	visitAndRegisterExpression(ctx: pp.ExpressionContext, currentScope: psymb.PScopedSymbol) : psymb.IPType | undefined
 	{
 		let methodCall : pp.MethodCallContext | undefined = ctx.methodCall();
 		let expressions : pp.ExpressionContext[] = ctx.expression();
@@ -713,7 +713,7 @@ export class UsageVisitor extends AbstractParseTreeVisitor<psymb.IPType | undefi
 			this.visitChildren(ctx);
 	}
 
-	visitAndRegisterCreator(creator: pp.CreatorContext, currentScope: symb.ScopedSymbol) : psymb.IPType | undefined
+	visitAndRegisterCreator(creator: pp.CreatorContext, currentScope: psymb.PScopedSymbol) : psymb.IPType | undefined
 	{
 		let primitiveTypeCtx : pp.PrimitiveTypeContext | undefined = creator.primitiveType();
 		let createdObjectName : pp.CreatedObjectNameContext | undefined = creator.createdObjectName();
@@ -769,7 +769,7 @@ export class UsageVisitor extends AbstractParseTreeVisitor<psymb.IPType | undefi
 		return undefined;
 	}
 
-	visitAndRegisterObjectIdentifier(identifier : TerminalNode, typeArguments : pp.TypeArgumentsOrDiamondContext, currentScope: symb.ScopedSymbol) : psymb.PType
+	visitAndRegisterObjectIdentifier(identifier : TerminalNode, typeArguments : pp.TypeArgumentsOrDiamondContext, currentScope: psymb.PScopedSymbol) : psymb.PType
 	{
 		//let identifier = ctx.IDENTIFIER();
 		//let typeArguments = ctx.typeArgumentsOrDiamond();
@@ -799,14 +799,14 @@ export class UsageVisitor extends AbstractParseTreeVisitor<psymb.IPType | undefi
 	// {
 	// 	if(node.symbol.type == pp.ProcessingParser.IDENTIFIER)
 	// 	{
-	// 		let focusedDecl : symb.BaseSymbol | undefined = this.pdeInfo.findNodeSymbolDefinition(node);
+	// 		let focusedDecl : psymb.PBaseSymbol | undefined = this.pdeInfo.findNodeSymbolDefinition(node);
 	// 		if(focusedDecl===undefined)
 	// 			this.pdeInfo.registerDefinition(node, focusedDecl);
 	// 		return;
 	// 	}
 	// }
 
-	visitAndRegisterMethodCall(expression: pp.ExpressionContext|undefined, dot:TerminalNode|undefined, methodCall: pp.MethodCallContext, currentScope: symb.ScopedSymbol) : psymb.IPType | undefined
+	visitAndRegisterMethodCall(expression: pp.ExpressionContext|undefined, dot:TerminalNode|undefined, methodCall: pp.MethodCallContext, currentScope: psymb.PScopedSymbol) : psymb.IPType | undefined
 	{
 		let methodID =  methodCall.IDENTIFIER();
 		let thisCall = methodCall.THIS();
@@ -884,7 +884,7 @@ export class UsageVisitor extends AbstractParseTreeVisitor<psymb.IPType | undefi
 		}
 	}
 
-	visitBaseMethodCall(callerType: psymb.IPType|undefined, methodID:TerminalNode, methodName:string, paramExpressionList:pp.ExpressionListContext|undefined, currentScope:symb.ScopedSymbol ) : psymb.PType | undefined
+	visitBaseMethodCall(callerType: psymb.IPType|undefined, methodID:TerminalNode, methodName:string, paramExpressionList:pp.ExpressionListContext|undefined, currentScope:psymb.PScopedSymbol ) : psymb.PType | undefined
 	{
 		let callScope = currentScope;
 		if(callerType)
@@ -955,7 +955,7 @@ export class UsageVisitor extends AbstractParseTreeVisitor<psymb.IPType | undefi
 		return result;
 	}
 
-	visitAndRegisterExpressionList(expressionList: pp.ExpressionListContext|undefined, currentScope: symb.ScopedSymbol) : psymb.IPType []
+	visitAndRegisterExpressionList(expressionList: pp.ExpressionListContext|undefined, currentScope: psymb.PScopedSymbol) : psymb.IPType []
 	{
 		let results : psymb.IPType [] = [];
 		if(expressionList)
@@ -977,7 +977,7 @@ export class UsageVisitor extends AbstractParseTreeVisitor<psymb.IPType | undefi
 		return results;
 	}
 
-	visitAndRegisterPrimary(primary: pp.PrimaryContext, currentScope: symb.ScopedSymbol) : psymb.IPType | undefined
+	visitAndRegisterPrimary(primary: pp.PrimaryContext, currentScope: psymb.PScopedSymbol) : psymb.IPType | undefined
 	{
 		let thisCtx = primary.THIS();
 		let identif = primary.IDENTIFIER();
@@ -1048,7 +1048,7 @@ export class UsageVisitor extends AbstractParseTreeVisitor<psymb.IPType | undefi
 			return psymb.PType.createPrimitiveType(psymb.PPrimitiveKind.Color);
 	}
 
-	visitAndRegisterVariable(expression: pp.ExpressionContext|undefined, dot: TerminalNode|undefined, identifier: TerminalNode, currentScope: symb.ScopedSymbol) : psymb.IPType | undefined
+	visitAndRegisterVariable(expression: pp.ExpressionContext|undefined, dot: TerminalNode|undefined, identifier: TerminalNode, currentScope: psymb.PScopedSymbol) : psymb.IPType | undefined
 	{
 		let varScope = currentScope;
 		let varName = identifier.text;
@@ -1080,7 +1080,7 @@ export class UsageVisitor extends AbstractParseTreeVisitor<psymb.IPType | undefi
 		let catchType = ctx.catchType();
 		let identif = ctx.IDENTIFIER();
 		
-		let currentScope : symb.ScopedSymbol = this.findScopeAtToken(identif.symbol);
+		let currentScope : psymb.PScopedSymbol = this.findScopeAtToken(identif.symbol);
 
 		let qualifName = catchType.qualifiedName();
 		if(qualifName && qualifName.length > 0)
@@ -1096,7 +1096,7 @@ export class UsageVisitor extends AbstractParseTreeVisitor<psymb.IPType | undefi
 		return this.defaultResult();
 	}
 
-	visitAndRegisterQualifiedName(nameCtx : pp.QualifiedNameContext, currentScope : symb.ScopedSymbol ) : psymb.CallContext | undefined
+	visitAndRegisterQualifiedName(nameCtx : pp.QualifiedNameContext, currentScope : psymb.PScopedSymbol ) : psymb.CallContext | undefined
 	{
 		let resultContext : psymb.CallContext | undefined;
 		let childIndex = 0;
@@ -1130,7 +1130,7 @@ export class UsageVisitor extends AbstractParseTreeVisitor<psymb.IPType | undefi
 		return resultContext;
 	}
 
-	resolveMethodOverloading(callContext : psymb.CallContext, candidates: psymb.PMethodSymbol[], expressionList: psymb.IPType[], callContainer: symb.ScopedSymbol, perfectMatch:boolean=false) : psymb.CallContext | undefined
+	resolveMethodOverloading(callContext : psymb.CallContext, candidates: psymb.PMethodSymbol[], expressionList: psymb.IPType[], callContainer: psymb.PScopedSymbol, perfectMatch:boolean=false) : psymb.CallContext | undefined
 	{
 		let finalCandidates: psymb.CallContext[] = []
 		for (let candidate of candidates) 
@@ -1158,7 +1158,7 @@ export class UsageVisitor extends AbstractParseTreeVisitor<psymb.IPType | undefi
 		return finalCandidates[0];
 	}
 
-	compareMethodParameters(callContext : psymb.CallContext, requiredParams : psymb.PParameterSymbol [], lastIsVarg:boolean, userParams : psymb.IPType[], symbolContext : symb.ScopedSymbol, perfectMatch:boolean=false) : boolean
+	compareMethodParameters(callContext : psymb.CallContext, requiredParams : psymb.PParameterSymbol [], lastIsVarg:boolean, userParams : psymb.IPType[], symbolContext : psymb.PScopedSymbol, perfectMatch:boolean=false) : boolean
 	{
 		let lastParam : psymb.PType | undefined;
 		if(lastIsVarg && requiredParams.length > 0 )
@@ -1239,7 +1239,7 @@ export class UsageVisitor extends AbstractParseTreeVisitor<psymb.IPType | undefi
 		return true;
 	}
 
-	compareObjectAgainstGeneric(objectType : psymb.IPType | undefined, requiredGenericType : psymb.IPType | undefined, symbolContext : symb.ScopedSymbol, callContext : psymb.CallContext, perfectMatch:boolean=false) : boolean
+	compareObjectAgainstGeneric(objectType : psymb.IPType | undefined, requiredGenericType : psymb.IPType | undefined, symbolContext : psymb.PScopedSymbol, callContext : psymb.CallContext, perfectMatch:boolean=false) : boolean
 	{
 		if( !callContext.symbol )
 		{
@@ -1289,7 +1289,7 @@ export class UsageVisitor extends AbstractParseTreeVisitor<psymb.IPType | undefi
 		console.error("Unable to resolve generic type: "+requiredGenericType.name);
 	}
 
-	compareObjectAgainstRequired(callContext : psymb.CallContext, appliedType : psymb.IPType | undefined, requiredType : psymb.IPType | undefined, symbolContext : symb.ScopedSymbol, perfectMatch:boolean=false) : boolean
+	compareObjectAgainstRequired(callContext : psymb.CallContext, appliedType : psymb.IPType | undefined, requiredType : psymb.IPType | undefined, symbolContext : psymb.PScopedSymbol, perfectMatch:boolean=false) : boolean
 	{
 		if(requiredType===undefined || appliedType === undefined)
 			return false;
@@ -1391,7 +1391,7 @@ export class UsageVisitor extends AbstractParseTreeVisitor<psymb.IPType | undefi
 		return false;
 	}
 
-	compareClassTypes(symbolType : psymb.IPType, expressionType : psymb.IPType, symbolContext : symb.BaseSymbol, perfectMatch:boolean=false) : boolean
+	compareClassTypes(symbolType : psymb.IPType, expressionType : psymb.IPType, symbolContext : psymb.PBaseSymbol, perfectMatch:boolean=false) : boolean
 	{
 		let requiredName = this.symbolTable.getFullPath(symbolType);
 		let expressionName = this.symbolTable.getFullPath(expressionType);
@@ -1414,7 +1414,7 @@ export class UsageVisitor extends AbstractParseTreeVisitor<psymb.IPType | undefi
 				return true;
 
 			//if perfectMatch is not required then we still need to check with the class inheritance
-			if(symbolContext instanceof symb.ScopedSymbol)
+			if(symbolContext instanceof psymb.PScopedSymbol)
 			{
 
 				let expressionSymbol = psymb.PUtils.resolveSymbolFromTypeSync(symbolContext, expressionType)
@@ -1445,7 +1445,7 @@ export class UsageVisitor extends AbstractParseTreeVisitor<psymb.IPType | undefi
 
 	}
 
-	checkClassInheritanceType(symbolType : psymb.PType, classSymbol:psymb.PClassSymbol, symbolContext : symb.BaseSymbol, perfectMatch:boolean=false) : boolean
+	checkClassInheritanceType(symbolType : psymb.PType, classSymbol:psymb.PClassSymbol, symbolContext : psymb.PBaseSymbol, perfectMatch:boolean=false) : boolean
 	{
 		let result : boolean = false;
 		if(classSymbol.name===symbolType.name)
@@ -1459,7 +1459,7 @@ export class UsageVisitor extends AbstractParseTreeVisitor<psymb.IPType | undefi
 		return false;
 	}
 
-	public findFirstClassOrInterfaceUp(scopedSymbol : symb.BaseSymbol) : psymb.PClassSymbol | psymb.PInterfaceSymbol | undefined
+	public findFirstClassOrInterfaceUp(scopedSymbol : psymb.PBaseSymbol) : psymb.PClassSymbol | psymb.PInterfaceSymbol | undefined
 	{
 		if( scopedSymbol instanceof psymb.PClassSymbol || scopedSymbol instanceof psymb.PInterfaceSymbol )
 			return scopedSymbol;
@@ -1468,9 +1468,9 @@ export class UsageVisitor extends AbstractParseTreeVisitor<psymb.IPType | undefi
 		return;
 	}
 
-	public resolveSymbolType(name:string, scope : symb.BaseSymbol) : symb.BaseSymbol | undefined
+	public resolveSymbolType(name:string, scope : psymb.PBaseSymbol) : psymb.PBaseSymbol | undefined
 	{
-		let res : symb.BaseSymbol | undefined = scope.resolveSync(name);
+		let res : psymb.PBaseSymbol | undefined = scope.resolveSync(name);
 		if(res instanceof psymb.PVariableSymbol && res.type)
 		{
 			   if( res.type.reference == PReferenceKind.Reference )
@@ -1489,15 +1489,15 @@ export class UsageVisitor extends AbstractParseTreeVisitor<psymb.IPType | undefi
 
 	private registerUsageForDeclarationType(typeCtx : pp.TypeTypeContext) : psymb.CallContext
 	{
-		let currentScope : symb.ScopedSymbol = this.findScopeAtToken(typeCtx.start);
+		let currentScope : psymb.PScopedSymbol = this.findScopeAtToken(typeCtx.start);
 		return this.registerUsageForTypeType(typeCtx, currentScope);
 	}
 
-	private findScopeAtToken(token: Token) : symb.ScopedSymbol
+	private findScopeAtToken(token: Token) : psymb.PScopedSymbol
 	{
 		const line = token.line;
 		const pos = token.charPositionInLine;
-		let currentScope : symb.ScopedSymbol | undefined =  parseUtils.findScopeAtPositionFromSymbols(this.pdeInfo.symbols, line, pos+1);
+		let currentScope : psymb.PScopedSymbol | undefined =  parseUtils.findScopeAtPositionFromSymbols(this.pdeInfo.symbols, line, pos+1);
 		if(!currentScope)
 			currentScope = this.mainClass;
 		return currentScope;
@@ -1512,10 +1512,10 @@ export class UsageVisitor extends AbstractParseTreeVisitor<psymb.IPType | undefi
 	}
 
 	
-	tryVisitAndRegisterIdentifier(varScope: symb.ScopedSymbol, identifier: TerminalNode, localOnly : boolean) : psymb.IPType | undefined
+	tryVisitAndRegisterIdentifier(varScope: psymb.PScopedSymbol, identifier: TerminalNode, localOnly : boolean) : psymb.IPType | undefined
 	{
 		let varName = identifier.text;
-		let symbolFound : symb.BaseSymbol | undefined = psymb.PUtils.resolveSymbolSync(varScope, symb.BaseSymbol, varName, localOnly );
+		let symbolFound : psymb.PBaseSymbol | undefined = psymb.PUtils.resolveSymbolSync(varScope, psymb.PBaseSymbol, varName, localOnly );
 		if(symbolFound)
 		{
 			if(symbolFound instanceof psymb.PVariableSymbol) 
@@ -1554,7 +1554,7 @@ export class UsageVisitor extends AbstractParseTreeVisitor<psymb.IPType | undefi
 			this.pdeInfo.registerDefinition(identifier, symbolFound);
 	}
 
-	private registerUsageForIdentifiers(identifiers : TerminalNode[], currentScope : symb.ScopedSymbol)
+	private registerUsageForIdentifiers(identifiers : TerminalNode[], currentScope : psymb.PScopedSymbol)
 	{
 		let callContext = psymb.PUtils.resolveComponentSync(currentScope, PComponentSymbol, identifiers[0].text );
 		this.pdeInfo.registerDefinition(identifiers[0], callContext );
@@ -1568,7 +1568,7 @@ export class UsageVisitor extends AbstractParseTreeVisitor<psymb.IPType | undefi
 		}
 	}
 
-	private registerUsageForClassOrInterfaceIdentifiers(classOrInterfaceType : pp.ClassOrInterfaceTypeContext, currentScope : symb.ScopedSymbol) : psymb.CallContext
+	private registerUsageForClassOrInterfaceIdentifiers(classOrInterfaceType : pp.ClassOrInterfaceTypeContext, currentScope : psymb.PScopedSymbol) : psymb.CallContext
 	{
 		let callContext : psymb.CallContext | undefined;
 		let childIndex = 0;
@@ -1585,7 +1585,7 @@ export class UsageVisitor extends AbstractParseTreeVisitor<psymb.IPType | undefi
 		return callContext;
 	}
 
-	private registerUsageForIdentifier(callContext:psymb.CallContext|undefined, identifier : TerminalNode, typeArguments : pp.TypeArgumentsContext, currentScope : symb.ScopedSymbol) : psymb.CallContext
+	private registerUsageForIdentifier(callContext:psymb.CallContext|undefined, identifier : TerminalNode, typeArguments : pp.TypeArgumentsContext, currentScope : psymb.PScopedSymbol) : psymb.CallContext
 	{
 		let idName : string = identifier.text;
 
@@ -1662,7 +1662,7 @@ export class UsageVisitor extends AbstractParseTreeVisitor<psymb.IPType | undefi
 
 	}
 
-	private registerUsageForTypeType(typeCtx : pp.TypeTypeContext, currentScope : symb.ScopedSymbol) : psymb.CallContext
+	private registerUsageForTypeType(typeCtx : pp.TypeTypeContext, currentScope : psymb.PScopedSymbol) : psymb.CallContext
 	{
 		let result : psymb.CallContext;
 		let classOrInterfaceType = typeCtx.classOrInterfaceType();

@@ -1,4 +1,5 @@
-// Processing-prefixed wrapper for antlr4-c3 MethodFlags
+// Method-level modifier bitfield for Java/Processing methods. Powers of two so
+// multiple flags can be OR'd together on a single method symbol.
 export enum PMethodFlags {
 	None = 0,
 	Virtual = 1,           // Overridable (default for instance methods)

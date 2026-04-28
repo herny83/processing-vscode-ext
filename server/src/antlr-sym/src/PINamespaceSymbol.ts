@@ -1,5 +1,6 @@
-// Processing-prefixed namespace-symbol interface.
-// Standalone — no antlr4-c3 dependency. Mirrors the antlr4-c3 INamespaceSymbol shape.
+// Contract for namespace-like scope holders. Adds inline/attributes metadata
+// on top of the scope contract so consumers can flatten namespace children
+// into the enclosing scope's lookup space.
 
 import { PIScopedSymbol } from "./PIScopedSymbol";
 

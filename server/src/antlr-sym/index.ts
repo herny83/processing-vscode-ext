@@ -17,6 +17,7 @@ export * from "./src/PType";
 export * from "./src/PUtils";
 export * from "./src/PThrowsSymbol";
 export * from "./src/PBaseSymbol";
+export * from "./src/PScopedSymbol";
 export * from "./src/PIScopedSymbol";
 export * from "./src/PINamespaceSymbol";
 export * from "./src/PSymbolConstructor";

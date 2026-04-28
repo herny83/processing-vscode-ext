@@ -13,7 +13,7 @@ export async function scheduleLookUpRename(pdeInfo : sketch.PdeContentInfo, line
 		return null;
 
 	let treeContext : ast.ParseTree | undefined;
-	let scopeAtPos : symb.BaseSymbol | undefined = parseUtils.findLeafSymbolAtPositionFromSymbols(pdeInfo.symbols, line, pos);
+	let scopeAtPos : psymb.PBaseSymbol | undefined = parseUtils.findLeafSymbolAtPositionFromSymbols(pdeInfo.symbols, line, pos);
 	if(!scopeAtPos )
 	{
 		scopeAtPos = sketch.getMainClass();
@@ -29,7 +29,7 @@ export async function scheduleLookUpRename(pdeInfo : sketch.PdeContentInfo, line
 	if(!parseNode)
 		return null;
 
-	let objectSymbol : symb.BaseSymbol | undefined;
+	let objectSymbol : psymb.PBaseSymbol | undefined;
 	if(psymb.PUtils.compareSymbolName(scopeAtPos, parseNode.text))
 		objectSymbol = scopeAtPos;
 	else

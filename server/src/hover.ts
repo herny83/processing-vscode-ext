@@ -12,10 +12,10 @@ export function scheduleHoverInfo(pdeInfo: sketch.PdeContentInfo, line: number, 
 		return null;
 
 	let baseContextTree : ast.ParseTree | undefined = pdeInfo.syntaxTokens;
-	let definition : symb.BaseSymbol | undefined;
+	let definition : psymb.PBaseSymbol | undefined;
 	//let definition : symbols.BaseSymbol | undefined = await lookUpSymbolDefinition(pdeInfo.symbols, line, pos);
 	// Finds for the symbol (block or scope) that contains our searched identifier
-	let symbolContainer : symb.BaseSymbol | undefined =  parseUtils.findLeafSymbolAtPositionFromSymbols(pdeInfo.symbols, line, pos);
+	let symbolContainer : psymb.PBaseSymbol | undefined =  parseUtils.findLeafSymbolAtPositionFromSymbols(pdeInfo.symbols, line, pos);
 	if(symbolContainer && symbolContainer.context)
 		baseContextTree = symbolContainer.context;
 
@@ -38,12 +38,12 @@ export function scheduleHoverInfo(pdeInfo: sketch.PdeContentInfo, line: number, 
 	let contextIType = pdeInfo.findNodeContextTypeDefinition(parseNode);
 
 	let hover : Hover | null = null;
-	let contextSymbol : symb.ScopedSymbol | undefined;
+	let contextSymbol : psymb.PScopedSymbol | undefined;
 
 	let callContext : psymb.CallContext | undefined = pdeInfo.findNodeCallContext(parseNode);
 	if(!callContext)
 	{
-		if(definition instanceof symb.ScopedSymbol)
+		if(definition instanceof psymb.PScopedSymbol)
 			contextSymbol = definition;
 		let contextType : psymb.PType | undefined;
 		if(contextIType)
@@ -61,7 +61,7 @@ export function scheduleHoverInfo(pdeInfo: sketch.PdeContentInfo, line: number, 
 	return hover;
 }
 
-function formatHoverContent(baseSymbol : symb.BaseSymbol, callContext : psymb.CallContext ) : MarkupContent
+function formatHoverContent(baseSymbol : psymb.PBaseSymbol, callContext : psymb.CallContext ) : MarkupContent
 {
 	let result = "";
 	let isLocalVar = false;
@@ -187,10 +187,10 @@ function resolveTypeName(type : psymb.PType, callContext : psymb.CallContext) : 
 		return typeTypeToString(type);
 }
 
-function resolveFormattedQualifiedPath(baseSymbol: symb.BaseSymbol): string {
+function resolveFormattedQualifiedPath(baseSymbol: psymb.PBaseSymbol): string {
 	let segments: string[] = [];
 
-	let current: symb.BaseSymbol | undefined = baseSymbol.parent;
+	let current: psymb.PBaseSymbol | undefined = baseSymbol.parent;
 
 	while (current && !(current instanceof psymb.PLibraryTable) && !(current instanceof psymb.PSymbolTable)) 
 	{

@@ -12,7 +12,7 @@ let debugFieldName:string="";
 
 export class JavaClassVisitor extends ClassVisitor
 {
-	protected componentSymbol : symb.ScopedSymbol | undefined;
+	protected componentSymbol : psymb.PScopedSymbol | undefined;
 	protected mainTable : psymb.PSymbolTable;
 	protected containerName:string;
 	protected name:string;
@@ -226,12 +226,12 @@ class DebugSignatureVisitor extends SignatureVisitor
 
 class ClassSignatureVisitor extends DebugSignatureVisitor
 {
-	protected scopedSymbol : symb.ScopedSymbol;
+	protected scopedSymbol : psymb.PScopedSymbol;
 	protected scopedType : psymb.PType | undefined;
 	protected interfaceIndex : number = 0;
 	protected formalTypes : psymb.PType [] | undefined;
 
-	public constructor(classSymbol : symb.ScopedSymbol) {
+	public constructor(classSymbol : psymb.PScopedSymbol) {
         super(Opcodes.ASM5);
 		this.scopedSymbol = classSymbol;
     }

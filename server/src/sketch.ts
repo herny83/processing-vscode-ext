@@ -60,10 +60,10 @@ export class PdeContentInfo implements IDiagnosticReporter
 	public md5hash : string = "";
 	public syntaxTokens : ParserRuleContext | null = null;
 
-	public importedSymbols : symb.BaseSymbol[] = [];
-	public importedStaticSymbols : symb.BaseSymbol[] = [];
+	public importedSymbols : psymb.PBaseSymbol[] = [];
+	public importedStaticSymbols : psymb.PBaseSymbol[] = [];
 
-	public symbols : symb.BaseSymbol [] = [];
+	public symbols : psymb.PBaseSymbol [] = [];
 	public unresolvedTypes : UnresolvedType[] | null = null; 
 	
 	public dirty : boolean = false;
@@ -110,7 +110,7 @@ export class PdeContentInfo implements IDiagnosticReporter
 		let result : psymb.PComponentSymbol | undefined = mainSymbolTable.dependencyTable.resolveComponent(psymb.PComponentSymbol, enclosingPath);
 		if(!result)
 			return "Unable to find any static import symbol for "+importPath+(allMembers?".*":"");
-		let components = psymb.PUtils.getAllMatchsSync(result.children, symb.BaseSymbol, staticSymbolName);
+		let components = psymb.PUtils.getAllMatchsSync(result.children, psymb.PBaseSymbol, staticSymbolName);
 		if(components.length == 0)
 			return "Unable to find any static import symbol for "+importPath+(allMembers?".*":"");
 		for(let comp of components)
@@ -261,13 +261,13 @@ export class PdeContentInfo implements IDiagnosticReporter
 	{
 		while(this.symbols.length > 0)
 		{
-			let s : symb.BaseSymbol | undefined = this.symbols.pop();
+			let s : psymb.PBaseSymbol | undefined = this.symbols.pop();
 			if(s)
 				mainClass.removeSymbol(s);
 		}
 	}
 
-	public getUsageReferencesFor( decl : symb.BaseSymbol, all:boolean=false ) : lsp.Range[] | undefined
+	public getUsageReferencesFor( decl : psymb.PBaseSymbol, all:boolean=false ) : lsp.Range[] | undefined
 	{
 		return this.getUsageReferencesForQualifiedName(decl.qualifiedName('.', true, false), all);
 	}
@@ -298,21 +298,21 @@ export class PdeContentInfo implements IDiagnosticReporter
 		return this.implementations.get(declName);
 	}
 
-	public findNodeSymbolDefinition( node : TerminalNode )  : symb.BaseSymbol | undefined
+	public findNodeSymbolDefinition( node : TerminalNode )  : psymb.PBaseSymbol | undefined
 	{
 		let qualifiedName = this.definitionDict.get(node);
-		return psymb.PUtils.resolveSymbolSync(mainSymbolTable, symb.BaseSymbol, qualifiedName);
+		return psymb.PUtils.resolveSymbolSync(mainSymbolTable, psymb.PBaseSymbol, qualifiedName);
 		//return mainSymbolTable.resolveSync(qualifiedName);
 	}
 
-	public findSymbol( qualifiedName : string )  : symb.BaseSymbol | undefined
+	public findSymbol( qualifiedName : string )  : psymb.PBaseSymbol | undefined
 	{
-		return psymb.PUtils.resolveSymbolSync(mainSymbolTable, symb.BaseSymbol, qualifiedName);
+		return psymb.PUtils.resolveSymbolSync(mainSymbolTable, psymb.PBaseSymbol, qualifiedName);
 	}
 
-	public findSymbolFromPType( symbolType : psymb.IPType ) : symb.BaseSymbol | undefined
+	public findSymbolFromPType( symbolType : psymb.IPType ) : psymb.PBaseSymbol | undefined
 	{
-		return psymb.PUtils.resolveSymbolSyncFromPType(mainSymbolTable, symb.BaseSymbol, symbolType);
+		return psymb.PUtils.resolveSymbolSyncFromPType(mainSymbolTable, psymb.PBaseSymbol, symbolType);
 	}
 
 	public findNodeSymbolDefinitionName( node : TerminalNode )  : string | undefined
@@ -330,7 +330,7 @@ export class PdeContentInfo implements IDiagnosticReporter
 		return this.contextTypeDict.get(node);
 	}
 
-	public registerDefinition(node: TerminalNode, declaredSymbol : symb.BaseSymbol | undefined, isInstance:boolean=true) : symb.BaseSymbol | undefined
+	public registerDefinition(node: TerminalNode, declaredSymbol : psymb.PBaseSymbol | undefined, isInstance:boolean=true) : psymb.PBaseSymbol | undefined
 	{
 		if(declaredSymbol !== undefined)
 		{

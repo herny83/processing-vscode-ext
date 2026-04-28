@@ -74,13 +74,13 @@ export function findParseTreeAtPosition(ctx: ParseTree, line: number, pos: numbe
 	return null;
 }
 
-export function findLeafSymbolAtPositionFromSymbols(symbols: symb.BaseSymbol[], line: number, pos: number): symb.BaseSymbol | undefined 
+export function findLeafSymbolAtPositionFromSymbols(symbols: psymb.PBaseSymbol[], line: number, pos: number): psymb.PBaseSymbol | undefined 
 {
-	let result : symb.BaseSymbol | undefined;
+	let result : psymb.PBaseSymbol | undefined;
 	for( let i : number = 0; i < symbols.length; i++ )
 	{
-		let sym : symb.BaseSymbol = symbols[i];
-		if(sym instanceof symb.ScopedSymbol)
+		let sym : psymb.PBaseSymbol = symbols[i];
+		if(sym instanceof psymb.PScopedSymbol)
 		{
 			result = findScopeAtPosition(sym, line, pos);
 			if(result)
@@ -92,13 +92,13 @@ export function findLeafSymbolAtPositionFromSymbols(symbols: symb.BaseSymbol[], 
 	return result;
 }
 
-export function findScopeAtPositionFromSymbols(symbols: symb.BaseSymbol[], line: number, pos: number): symb.ScopedSymbol | undefined 
+export function findScopeAtPositionFromSymbols(symbols: psymb.PBaseSymbol[], line: number, pos: number): psymb.PScopedSymbol | undefined 
 {
-	let result : symb.ScopedSymbol | undefined;
+	let result : psymb.PScopedSymbol | undefined;
 	for( let i : number = 0; i < symbols.length; i++ )
 	{
-		let sym : symb.BaseSymbol = symbols[i];
-		if(sym instanceof symb.ScopedSymbol)
+		let sym : psymb.PBaseSymbol = symbols[i];
+		if(sym instanceof psymb.PScopedSymbol)
 		{
 			result = findScopeAtPosition(sym, line, pos);
 			if(result)
@@ -108,7 +108,7 @@ export function findScopeAtPositionFromSymbols(symbols: symb.BaseSymbol[], line:
 	return result;
 }
 
-export function findScopeAtPosition(sym: symb.ScopedSymbol, line: number, pos: number): symb.ScopedSymbol | undefined 
+export function findScopeAtPosition(sym: psymb.PScopedSymbol, line: number, pos: number): psymb.PScopedSymbol | undefined 
 {
 	let ctx : ParseTree | undefined = sym.context;
 	if(!ctx)
@@ -123,10 +123,10 @@ export function findScopeAtPosition(sym: symb.ScopedSymbol, line: number, pos: n
 	{
 		if( checkRuleNodeBounds(ctx, line, pos) )
 		{
-			if(sym instanceof symb.ScopedSymbol)
+			if(sym instanceof psymb.PScopedSymbol)
 			{
-				let scoped : symb.ScopedSymbol = sym;
-				let result : symb.ScopedSymbol | undefined =  findScopeAtPositionFromSymbols(scoped.children, line, pos);
+				let scoped : psymb.PScopedSymbol = sym;
+				let result : psymb.PScopedSymbol | undefined =  findScopeAtPositionFromSymbols(scoped.children, line, pos);
 				return result ? result : scoped;
 			}
 			else
@@ -250,7 +250,7 @@ function getJavaSourceName(anySymbol: any) : string | undefined
 	return anySymbol.sourceFileName;
 }
 
-export function findPdeName(baseSymbol : symb.BaseSymbol) : string | undefined
+export function findPdeName(baseSymbol : psymb.PBaseSymbol) : string | undefined
 {
 	let result : string | undefined = getPdeName(baseSymbol);
 	if( result ) 
@@ -260,7 +260,7 @@ export function findPdeName(baseSymbol : symb.BaseSymbol) : string | undefined
 	return findPdeName(baseSymbol.parent);
 }
 
-export function findJavaSourceName(baseSymbol : symb.BaseSymbol) : string | undefined
+export function findJavaSourceName(baseSymbol : psymb.PBaseSymbol) : string | undefined
 {
 	let result : string | undefined = getJavaSourceName(baseSymbol);
 	if( result ) 
@@ -270,7 +270,7 @@ export function findJavaSourceName(baseSymbol : symb.BaseSymbol) : string | unde
 	return findJavaSourceName(baseSymbol.parent);
 }
 
-export function findJavaSourcePath(baseSymbol : symb.BaseSymbol) : string | undefined
+export function findJavaSourcePath(baseSymbol : psymb.PBaseSymbol) : string | undefined
 {
 	let javaFileName : string | undefined = getJavaSourceName(baseSymbol);
 	while(!javaFileName && baseSymbol.parent)

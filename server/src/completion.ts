@@ -70,9 +70,9 @@ for(let i = ProcessingParser.IDENTIFIER; i <= ProcessingParser.RULE_hexColorLite
 
 let lastPdeInfo : sketch.PdeContentInfo | undefined;
 let lastParseNodeAtPos : ParseTree | null;
-let lastScopeAtPos : symb.ScopedSymbol | undefined;
+let lastScopeAtPos : psymb.PScopedSymbol | undefined;
 let lastContextType : IPType | undefined;
-let lastSymbols : symb.BaseSymbol [] = [];
+let lastSymbols : psymb.PBaseSymbol [] = [];
 
 export async function collectSignatureHelp(pdeInfo: sketch.PdeContentInfo, line: number, posInLine : number, context : lsp.SignatureHelpContext): Promise<lsp.SignatureHelp | null> 
 {
@@ -80,7 +80,7 @@ export async function collectSignatureHelp(pdeInfo: sketch.PdeContentInfo, line:
 		return null;
 
 	// Finds for the symbol (block or scope) that contains our searched identifier
-	let scopeAtPos : symb.ScopedSymbol | undefined =  parseUtils.findScopeAtPositionFromSymbols(pdeInfo.symbols, line, posInLine);
+	let scopeAtPos : psymb.PScopedSymbol | undefined =  parseUtils.findScopeAtPositionFromSymbols(pdeInfo.symbols, line, posInLine);
 	if(!scopeAtPos || !scopeAtPos.context)
 		return null;
 
@@ -150,7 +150,7 @@ export async function collectCandidates(pdeInfo: sketch.PdeContentInfo, line: nu
 		return [];
 
 	// Finds for the symbol (block or scope) that contains our searched identifier
-	let scopeAtPos : symb.ScopedSymbol | undefined =  parseUtils.findScopeAtPositionFromSymbols(pdeInfo.symbols, line, posInLine);
+	let scopeAtPos : psymb.PScopedSymbol | undefined =  parseUtils.findScopeAtPositionFromSymbols(pdeInfo.symbols, line, posInLine);
 	if(!scopeAtPos || !scopeAtPos.context)
 		return [];
 	
@@ -181,7 +181,7 @@ export async function collectCandidates(pdeInfo: sketch.PdeContentInfo, line: nu
 
 	let candidates = core.collectCandidates(tokenIndex);
 	let completions : lsp.CompletionItem[] = []; 
-	let symbols: symb.BaseSymbol[] = [];
+	let symbols: psymb.PBaseSymbol[] = [];
 
 	let requiresIdentifier : boolean = false;
 	if( parseNode && parseNode instanceof TerminalNode && parseNode.symbol.type == ProcessingParser.DOT && contextType)
@@ -198,7 +198,7 @@ export async function collectCandidates(pdeInfo: sketch.PdeContentInfo, line: nu
 			else
 			{
 				let callContext = psymb.PUtils.resolveComponentSyncFromPType(scopeAtPos, psymb.PClassSymbol, contextType );
-				if(callContext && callContext instanceof symb.ScopedSymbol)
+				if(callContext && callContext instanceof psymb.PScopedSymbol)
 					members = await suggestMembers(callContext, contextType, true, symbols, line, posInLine);
 			}
 		}
@@ -240,7 +240,7 @@ export async function collectCandidates(pdeInfo: sketch.PdeContentInfo, line: nu
 	return completions;
 }
 
-async function suggestMembers(scopeAtPos: symb.ScopedSymbol, refType:IPType|undefined, localOnly:boolean=false, symbols: symb.BaseSymbol[], line:number, charPos:number) : Promise<lsp.CompletionItem[]>
+async function suggestMembers(scopeAtPos: psymb.PScopedSymbol, refType:IPType|undefined, localOnly:boolean=false, symbols: psymb.PBaseSymbol[], line:number, charPos:number) : Promise<lsp.CompletionItem[]>
 {
 	let completions : lsp.CompletionItem[] = [];
 
@@ -369,7 +369,7 @@ export function fillCompletionItemDetails(item: lsp.CompletionItem) : lsp.Comple
 
 	let detailText = "";
 
-	let symbol : symb.BaseSymbol | undefined;
+	let symbol : psymb.PBaseSymbol | undefined;
 	let itemSymbolIndex = item.data?.refIndex?? -1;
 
 	// The parameters if its a method

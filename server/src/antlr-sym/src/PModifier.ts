@@ -1,4 +1,6 @@
-// Processing-prefixed wrapper for Java/Processing modifiers
+// Java/Processing modifier keywords: access (Public/Protected/Private),
+// storage/inheritance (Static/Abstract/Final), and concurrency/storage
+// qualifiers (Synchronized, Native, Strictfp, Transient, Volatile).
 export enum PModifier {
 	Public = 0,
 	Protected = 1,

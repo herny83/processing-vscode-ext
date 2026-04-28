@@ -15,7 +15,7 @@ export async function scheduleLookUpReference(pdeInfo : sketch.PdeContentInfo, l
 		return null;
 
 	let treeContext : ast.ParseTree | undefined;
-	let scopeAtPos : symb.BaseSymbol | undefined = parseUtils.findLeafSymbolAtPositionFromSymbols(pdeInfo.symbols, line, pos);
+	let scopeAtPos : psymb.PBaseSymbol | undefined = parseUtils.findLeafSymbolAtPositionFromSymbols(pdeInfo.symbols, line, pos);
 	if(!scopeAtPos )
 	{
 		scopeAtPos = sketch.getMainClass();
@@ -31,7 +31,7 @@ export async function scheduleLookUpReference(pdeInfo : sketch.PdeContentInfo, l
 	if(!parseNode)
 		return null;
 	
-	let objectSymbol : symb.BaseSymbol | undefined;
+	let objectSymbol : psymb.PBaseSymbol | undefined;
 	if(psymb.PUtils.compareSymbolName(scopeAtPos, parseNode.text))
 		objectSymbol = scopeAtPos;
 	else
@@ -96,7 +96,7 @@ export async function collectReferencesForDeclarationName(declName : string, res
 
 function collectReferencesForMethod(methodSymbol : psymb.PMethodSymbol, locations : Location [])
 {
-	let ownerSymbol : symb.BaseSymbol | undefined = psymb.PUtils.getFirstParentMatch(psymb.PComponentSymbol, methodSymbol);
+	let ownerSymbol : psymb.PBaseSymbol | undefined = psymb.PUtils.getFirstParentMatch(psymb.PComponentSymbol, methodSymbol);
 	if(ownerSymbol instanceof psymb.PComponentSymbol)
 	{
 		let candidates = psymb.PUtils.getAllSymbolsSync(ownerSymbol, psymb.PMethodSymbol, methodSymbol.name, true, true);
@@ -189,7 +189,7 @@ export async function findPdeReferencesByName(symbolName : string, qualifiedClas
 		return locations;
 
 	// Try to resolve the owning class from the dependency table
-	let ownerSymbol : symb.BaseSymbol | undefined;
+	let ownerSymbol : psymb.PBaseSymbol | undefined;
 	if(qualifiedClassName)
 		ownerSymbol = symbolTable.dependencyTable.resolveComponent(psymb.PComponentSymbol, qualifiedClassName);
 
@@ -198,7 +198,7 @@ export async function findPdeReferencesByName(symbolName : string, qualifiedClas
 	{
 		let mainClass = sketch.getMainClass();
 		if(mainClass)
-			ownerSymbol = psymb.PUtils.resolveSymbolSync(mainClass, symb.BaseSymbol, symbolName);
+			ownerSymbol = psymb.PUtils.resolveSymbolSync(mainClass, psymb.PBaseSymbol, symbolName);
 
 		// If we found the symbol directly in the main class, use the same branching as scheduleLookUpReference
 		if(ownerSymbol)
@@ -236,7 +236,7 @@ export async function findPdeReferencesByName(symbolName : string, qualifiedClas
 	}
 
 	// Owner class found in dependency table — find the member symbol(s)
-	if(ownerSymbol instanceof symb.ScopedSymbol)
+	if(ownerSymbol instanceof psymb.PScopedSymbol)
 	{
 		// If symbolName matches the class itself (e.g. finding references to the class name)
 		if(psymb.PUtils.compareSymbolName(ownerSymbol, symbolName))
@@ -247,7 +247,7 @@ export async function findPdeReferencesByName(symbolName : string, qualifiedClas
 		}
 
 		// Find all members with matching name (handles overloads — returns refs for all of them)
-		let members = psymb.PUtils.getAllSymbolsSync(ownerSymbol, symb.BaseSymbol, symbolName, true);
+		let members = psymb.PUtils.getAllSymbolsSync(ownerSymbol, psymb.PBaseSymbol, symbolName, true);
 		for(let member of members)
 		{
 			let declName = psymb.PUtils.extractSignature(member);

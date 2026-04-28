@@ -4,17 +4,17 @@ import * as pp from './grammer/ProcessingParser';
 import * as parseUtils from './astutils'
 import * as ast from 'antlr4ts/tree'
 import * as sketch from './sketch'
-import * as symb from 'antlr4-c3'
+import * as psymb from './antlr-sym'
 
 export async function scheduleLookUpDefinition(pdeInfo: sketch.PdeContentInfo, line: number, pos: number): Promise<Definition | null>
 {
 	if(!pdeInfo.syntaxTokens)
 		return null;
 
-	let definition : symb.BaseSymbol | undefined;
+	let definition : psymb.PBaseSymbol | undefined;
 	let treeContext : ast.ParseTree | undefined;
 	// Finds for the symbol (block or scope) that contains our searched identifier
-	let scopeAtPos : symb.ScopedSymbol | undefined =  parseUtils.findScopeAtPositionFromSymbols(pdeInfo.symbols, line, pos);
+	let scopeAtPos : psymb.PScopedSymbol | undefined =  parseUtils.findScopeAtPositionFromSymbols(pdeInfo.symbols, line, pos);
 	if(!scopeAtPos )
 	{
 		scopeAtPos = sketch.getMainClass();

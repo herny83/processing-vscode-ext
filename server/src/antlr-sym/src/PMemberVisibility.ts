@@ -1,7 +1,7 @@
-// PMemberVisibility.ts
-// Enum to replace antlr4-c3's MemberVisibility
+// Visibility levels for class/interface members in Java/Processing.
+// PackagePrivate is the default when no access modifier is declared.
 
-export enum PMemberVisibility 
+export enum PMemberVisibility
 {
 	Public = 0,
 	Protected = 1,

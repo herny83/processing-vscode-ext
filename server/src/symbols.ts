@@ -17,15 +17,15 @@ const VAR_TYPE_PARAM = 4;
 
 export class SymbolTableVisitor extends AbstractParseTreeVisitor<void> implements ProcessingParserVisitor<void>
 {
-	private visitingSymbols : symb.BaseSymbol[] | null = null;
-	private visitorRootSymbol : symb.ScopedSymbol | null = null;
+	private visitingSymbols : psymb.PBaseSymbol[] | null = null;
+	private visitorRootSymbol : psymb.PScopedSymbol | null = null;
 	private mainClass : psymb.PClassSymbol;
 	protected pdeInfo: PdeContentInfo | undefined;
 	public symbolTable : psymb.PSymbolTable;
 
 	private unresolvedTypes : psymb.PType[];
-	private scopeStack : symb.ScopedSymbol[];
-	protected scope : symb.ScopedSymbol;
+	private scopeStack : psymb.PScopedSymbol[];
+	protected scope : psymb.PScopedSymbol;
 
 	constructor(symbolTable : psymb.PSymbolTable, mainClass : psymb.PClassSymbol)
 	{
@@ -57,7 +57,7 @@ export class SymbolTableVisitor extends AbstractParseTreeVisitor<void> implement
 		return types;
 	}
 
-	pushScope(newScope: symb.ScopedSymbol)
+	pushScope(newScope: psymb.PScopedSymbol)
 	{
 		this.scopeStack.push(this.scope);
 		this.scope = newScope;
@@ -460,7 +460,7 @@ export class SymbolTableVisitor extends AbstractParseTreeVisitor<void> implement
 		this.tryDeclareMethod(genericParams, methodDecl, visibility, modifiers);
 	}
 
-	private tryDeclareGenericParams(typeParameters: pp.TypeParametersContext, scope : symb.ScopedSymbol) 
+	private tryDeclareGenericParams(typeParameters: pp.TypeParametersContext, scope : psymb.PScopedSymbol) 
 	{
 		let typeParameterArray = typeParameters.typeParameter();
 		let boundTypes: psymb.PType[] = [];
@@ -574,7 +574,7 @@ export class SymbolTableVisitor extends AbstractParseTreeVisitor<void> implement
 	visitBlock(ctx: pp.BlockContext)
 	{
 		let fakeSymbolName : string = "block"+ctx.start.startIndex;
-		let newSymbol : symb.ScopedSymbol = new symb.ScopedSymbol(fakeSymbolName);
+		let newSymbol : psymb.PScopedSymbol = new psymb.PScopedSymbol(fakeSymbolName);
 		this.addChildSymbol(ctx, newSymbol);
 		this.pushScope(newSymbol);
 		this.visitChildren(ctx);
@@ -691,7 +691,7 @@ export class SymbolTableVisitor extends AbstractParseTreeVisitor<void> implement
 				modifiers.push(symb.Modifier.Final);
 		}
 		let savedSymbol = this.scope;
-		let catchSymbol : symb.ScopedSymbol = new symb.ScopedSymbol("catch"+ctx.start.startIndex);
+		let catchSymbol : psymb.PScopedSymbol = new psymb.PScopedSymbol("catch"+ctx.start.startIndex);
 		this.addChildSymbol(ctx, catchSymbol);
 		this.scope = catchSymbol;
 
@@ -711,7 +711,7 @@ export class SymbolTableVisitor extends AbstractParseTreeVisitor<void> implement
 	visitForLoop(ctx: pp.ForLoopContext)
 	{
 		let fakeSymbolName : string = "for"+ctx.start.startIndex;
-		let newSymbol : symb.ScopedSymbol = new symb.ScopedSymbol(fakeSymbolName);
+		let newSymbol : psymb.PScopedSymbol = new psymb.PScopedSymbol(fakeSymbolName);
 		this.addChildSymbol(ctx, newSymbol, true);
 		this.pushScope(newSymbol);
 		this.visitChildren(ctx);
@@ -725,7 +725,7 @@ export class SymbolTableVisitor extends AbstractParseTreeVisitor<void> implement
 	// PROTECTED HELPER FUNCTIONS
 	// =============================================================
 
-	protected addScope(ctx: ParseTree, newSymbol: symb.ScopedSymbol, action: () => symb.SymbolTable)
+	protected addScope(ctx: ParseTree, newSymbol: psymb.PScopedSymbol, action: () => symb.SymbolTable)
 	{
 		
 		try {
@@ -735,7 +735,7 @@ export class SymbolTableVisitor extends AbstractParseTreeVisitor<void> implement
 			try {
 				return action();
 			} finally {
-				this.scope = newSymbol.parent as symb.ScopedSymbol;
+				this.scope = newSymbol.parent as psymb.PScopedSymbol;
 			}
 		} 
 		catch(e) 
@@ -748,7 +748,7 @@ export class SymbolTableVisitor extends AbstractParseTreeVisitor<void> implement
 		}
 	}
 
-	protected addChildSymbol(ctx: ParseTree, newSymbol: symb.BaseSymbol, ignoreRegisterSymbol:boolean=false)
+	protected addChildSymbol(ctx: ParseTree, newSymbol: psymb.PBaseSymbol, ignoreRegisterSymbol:boolean=false)
 	{
 		newSymbol.context = ctx;
 		this.scope.addSymbol(newSymbol);
@@ -791,7 +791,7 @@ export class SymbolTableVisitor extends AbstractParseTreeVisitor<void> implement
 		}
 		try
 		{
-			let symbol : symb.BaseSymbol;
+			let symbol : psymb.PBaseSymbol;
 			if(kind == VAR_PARAM)
 				symbol = new psymb.PParameterSymbol(terminalNode.text, val, varType);
 			else if(kind == VAR_FIELD)
@@ -858,7 +858,7 @@ export class SymbolTableVisitor extends AbstractParseTreeVisitor<void> implement
 		}
 		return result;
 	}
-	applyModifiers(symbol: symb.BaseSymbol, visibility:symb.MemberVisibility, modifiers:symb.Modifier[])
+	applyModifiers(symbol: psymb.PBaseSymbol, visibility:symb.MemberVisibility, modifiers:symb.Modifier[])
 	{
 		symbol.visibility = visibility;
 		symbol.modifiers.clear();

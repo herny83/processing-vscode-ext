@@ -1,6 +1,85 @@
-// Processing-prefixed wrapper for antlr4-c3 BaseSymbol
-// All Processing symbol system code should use this instead of antlr4-c3 directly
+// Root class of the Processing symbol hierarchy. Every symbol carries name,
+// optional parse-tree context, modifiers, visibility, and parent linkage,
+// plus name-based resolution that defers to the enclosing scope.
+//
+// modifiers/visibility will switch to PModifier/PMemberVisibility once all
+// call sites are flipped to the P-prefixed enums. Until then the field types
+// stay on the legacy enums to avoid a churn-only sweep across many files.
 
-import { BaseSymbol as Antlr4C3BaseSymbol } from "antlr4-c3";
+import { ParseTree } from "antlr4ts/tree/ParseTree";
+import { Modifier, MemberVisibility } from "antlr4-c3";
+import type { PIScopedSymbol } from "./PIScopedSymbol";
+import type { PSymbolConstructor } from "./PSymbolConstructor";
 
-export class PBaseSymbol extends Antlr4C3BaseSymbol {}
+export class PBaseSymbol
+{
+	public name: string;
+	public context?: ParseTree;
+	public readonly modifiers: Set<Modifier> = new Set<Modifier>();
+	public visibility: MemberVisibility = MemberVisibility.Unknown;
+
+	private _parent: PIScopedSymbol | undefined;
+
+	constructor(name: string = "")
+	{
+		this.name = name;
+	}
+
+	get parent(): PIScopedSymbol | undefined
+	{
+		return this._parent;
+	}
+
+	setParent(parent?: PIScopedSymbol): void
+	{
+		this._parent = parent;
+	}
+
+	removeFromParent(): void
+	{
+		this._parent?.removeSymbol(this);
+		this._parent = undefined;
+	}
+
+	async resolve(name: string, localOnly: boolean = false): Promise<PBaseSymbol | undefined>
+	{
+		return this._parent?.resolve(name, localOnly);
+	}
+
+	resolveSync(name: string, localOnly: boolean = false): PBaseSymbol | undefined
+	{
+		return this._parent?.resolveSync(name, localOnly);
+	}
+
+	getParentOfType<T extends PBaseSymbol, Args extends unknown[]>(t: PSymbolConstructor<T, Args>): T | undefined
+	{
+		let run: PIScopedSymbol | undefined = this._parent;
+		while (run)
+		{
+			if (run instanceof t)
+				return run as unknown as T;
+			run = run.parent;
+		}
+		return undefined;
+	}
+
+	qualifiedName(separator: string = ".", full: boolean = false, includeAnonymous: boolean = false): string
+	{
+		if (!includeAnonymous && this.name.length === 0)
+			return "";
+
+		let result = this.name.length === 0 ? "<anonymous>" : this.name;
+		let run: PIScopedSymbol | undefined = this._parent;
+		while (run)
+		{
+			if (includeAnonymous || run.name.length > 0)
+				result = (run.name.length === 0 ? "<anonymous>" : run.name) + separator + result;
+
+			if (!full || !run.parent)
+				break;
+
+			run = run.parent;
+		}
+		return result;
+	}
+}
