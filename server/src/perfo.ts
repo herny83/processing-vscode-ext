@@ -66,7 +66,7 @@ export function measureEnd(name : string)
 		return;
 	}
 	currentMeasure.stop();
-	currentMeasure = measureStack.pop();
+	currentMeasure = measureStack.pop() ?? currentMeasure;
 }
 
 export function print()

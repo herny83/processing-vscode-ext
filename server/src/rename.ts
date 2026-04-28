@@ -6,7 +6,7 @@ import * as psymb from './antlr-sym'
 import * as sketch from './sketch';
 import * as path from 'path';
 
-export async function scheduleLookUpRename(pdeInfo : sketch.PdeContentInfo, line : number, pos : number, newName: string) : Promise<WorkspaceEdit> 
+export async function scheduleLookUpRename(pdeInfo : sketch.PdeContentInfo, line : number, pos : number, newName: string) : Promise<WorkspaceEdit | null>
 {
 	if( !pdeInfo.syntaxTokens)
 		return null;

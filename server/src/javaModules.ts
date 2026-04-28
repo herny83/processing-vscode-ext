@@ -122,7 +122,7 @@ export function loadJavaSymbolsFromFile(filename:string, mainTable : psymb.PSymb
 {
 	let filePath = filename;
 	let classMap : Map<string, Buffer> = new Map<string, Buffer>();
-	let className : string;
+	let className : string = "";
 
 	try {
         // Create an instance of AdmZip
@@ -167,7 +167,8 @@ export function loadJavaSymbolsFromFile(filename:string, mainTable : psymb.PSymb
 				const byteArray = new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength);
 				new ClassReader(byteArray).accept(visitor);
 			} catch (error) {
-				console.error(`Error reading Java class symbol: ${error.stack} (${className})`);
+				const stack = error instanceof Error ? error.stack : String(error);
+				console.error(`Error reading Java class symbol: ${stack} (${className})`);
 			}
 			i++;
 		}

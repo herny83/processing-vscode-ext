@@ -29,7 +29,7 @@ export class CallContext
 	public symbol : PScopedSymbol | undefined;
 	public generics : Map<string, PType> = new Map<string, PType>();
 
-	constructor( callerType : PType, callerSymbol : PScopedSymbol | undefined )
+	constructor( callerType : PType | undefined, callerSymbol : PScopedSymbol | undefined )
 	{
 		this.type = callerType;
 		this.symbol = callerSymbol;

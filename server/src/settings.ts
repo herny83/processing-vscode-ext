@@ -39,7 +39,7 @@ function startVscodeWatcher(settingsDir: string) {
 	vscodeWatcher = fs.watch(settingsDir, onVsCodeFolderContentChanged);
 }
 
-function onProjectFolderContentChanged(eventType : fs.WatchEventType, filename: string)
+function onProjectFolderContentChanged(eventType : fs.WatchEventType, filename: string | null)
 {
 	if (filename === '.vscode') {
 		if (fs.existsSync(settingsDir) && !vscodeWatcher) {
@@ -54,7 +54,7 @@ function onProjectFolderContentChanged(eventType : fs.WatchEventType, filename: 
 	}
 }
 
-function onVsCodeFolderContentChanged(eventType : fs.WatchEventType, filename: string)
+function onVsCodeFolderContentChanged(eventType : fs.WatchEventType, filename: string | null)
 {
 	if (filename === 'settings.json')
 		readAndCacheSettings();
@@ -84,11 +84,12 @@ function readAndCacheSettings()
 			cachedSettings = JSON.parse(content);
 			server.connection.sendDiagnostics({uri: settingsFileUri, diagnostics: []});
 		} catch (e) {
+			const err = e instanceof Error ? e : new Error(String(e));
 			let diagnostic: lsp.Diagnostic = {
 						severity: lsp.DiagnosticSeverity.Error,
 						range: lsp.Range.create(0, 1, 0, 1), // Placeholder range
-						message: e.message,
-						source: e.name
+						message: err.message,
+						source: err.name
 				   };
 			server.connection.sendDiagnostics({uri: settingsFileUri, diagnostics: [diagnostic]});
 			cachedSettings = {};

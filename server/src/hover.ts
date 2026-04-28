@@ -178,9 +178,9 @@ function formatHoverContent(baseSymbol : psymb.PBaseSymbol, callContext : psymb.
 	return markupResult;
 }
 
-function resolveTypeName(type : psymb.PType, callContext : psymb.CallContext) : string
+function resolveTypeName(type : psymb.PType | undefined, callContext : psymb.CallContext) : string
 {
-	if(type.typeKind == psymb.PTypeKind.Generic)
+	if(type && type.typeKind == psymb.PTypeKind.Generic)
 		return extractClassName(parseUtils.convertAliasType(type, callContext).name);
 	else
 		return typeTypeToString(type);

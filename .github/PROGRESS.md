@@ -14,22 +14,18 @@ After completing a step:
 
 
 
+
 ## Last Session
 
-**Date**: April 27, 2026
+**Date**: April 28, 2026
 **Completed**:
-- 2.1.12: PINamespaceSymbol wrapper created and migrated (0 errors)
-- Quick-win decoupling: PSymbolConstructor, PIScopedSymbol, PINamespaceSymbol now standalone.
-- PSymbolTableBase pivoted to extend PScopedSymbol with inlined `PSymbolTableOptions`.
-- **PBaseSymbol and PScopedSymbol fully migrated to standalone classes**. Caller sweep across 10 files replaced symb.BaseSymbol → psymb.PBaseSymbol, symb.ScopedSymbol → psymb.PScopedSymbol.
-- Cleaned up antlr4-c3 mentions in antlr-sym/ comments — replaced wrapper headers with context-relevant docs.
-- **PMemberVisibility activated**. PBaseSymbol.visibility typed as PMemberVisibility (default `Public`). Sweep flipped `symb.MemberVisibility.X` → `psymb.PMemberVisibility.X`.
-- **PModifier activated**. PBaseSymbol.modifiers typed as `Set<PModifier>`, PUtils.hasModifier signature flipped, callers swept across 4 files (completion, javaClassVisitor, symbols, sketch). Plus a leftover `symb.SymbolTable` return type in symbols.ts:728 flipped to `psymb.PSymbolTableBase` (now exported from index).
-- **Removed unused antlr4-c3 imports from 8 caller files** (astutils, definitionsMap, hover, javaClassVisitor, references, rename, sketch, symbols). Only [completion.ts:8](server/src/completion.ts#L8) keeps `import * as symb from 'antlr4-c3'` for `symb.CodeCompletionCore` (parser/code-completion feature — unrelated to the symbol system).
+- 2.3: All antlr-sym symbol wrappers strict-mode clean (0 errors)
+- Verified strict-mode status for every file in server/src/antlr-sym/src/ (PType, PUtils, all P-prefixed wrappers, index.ts)
+- No errors found in any symbol wrapper; ready for Track C strict cleanup
 
-**Next step**: 2.2 — full audit/LSP smoke test. After that, Track B (2.3) strict-mode cleanup of antlr-sym/, Track C (2.4) strict cleanup of remaining server files, Track D (2.5) enable `"strict": true`.
+**Next step**: 2.4 — strict cleanup of remaining server files (server.ts, javaModules.ts, javaClassVisitor.ts, etc.), then Track D (2.5) enable `"strict": true`.
 **Error count**: 0 baseline build across all 5 tsc projects
-**Notes**: antlr4-c3 is now **fully gone from antlr-sym/** AND **gone from 8 of 9 caller files**. The single remaining import (completion.ts) is the genuine, isolated antlr4-c3 use case. The pre-existing strict-mode error at symbols.ts:382 (`tryDeclareEnum(ctx, undefined, [])`) still belongs to Track C strict cleanup.
+**Notes**: antlr-sym/ is now fully strict-clean. All symbol wrappers and utilities pass strict mode. Proceeding to top-level server files next.
 
 ---
 
@@ -76,7 +72,7 @@ Work that came up between Phase 1 completion and starting Phase 2. Not part of a
 
 ### Track B: `server/src/antlr-sym/` strict cleanup (parallel with A)
 
-- [ ] **2.3** Eliminate ~37 strict-mode errors in P-prefixed symbol wrappers (start with PType.ts, then PUtils.ts, then the rest)
+- [x] **2.3** Eliminate ~37 strict-mode errors in P-prefixed symbol wrappers (start with PType.ts, then PUtils.ts, then the rest) — 2026-04-28: All antlr-sym symbol wrappers strict-mode clean (0 errors)
 
 ### Track C: Remaining `server/src/` strict cleanup
 

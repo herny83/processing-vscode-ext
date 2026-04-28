@@ -85,7 +85,7 @@ export function findLeafSymbolAtPositionFromSymbols(symbols: psymb.PBaseSymbol[]
 			if(result)
 				break			
 		}
-		else if( checkParseNodeBounds(sym.context, line, pos) )
+		else if( sym.context && checkParseNodeBounds(sym.context, line, pos) )
 			return sym;
 	}
 	return result;
@@ -322,7 +322,7 @@ export function  convertAliasType( type: psymb.PType, callContext : psymb.CallCo
 
 export function convertArrayAliasType( type: psymb.PType, callContext : psymb.CallContext ) : psymb.PType
 {
-    if( !callContext.symbol )
+    if( !callContext.symbol || !type.arrayType )
     {
         console.error("Unable to resolve Generic Alias: "+type.name)
         return type;
@@ -351,7 +351,7 @@ export function convertComponentAliasType( type: psymb.PType, callContext : psym
 
 		if(type.genericTypes[i].typeKind == psymb.PTypeKind.Generic)
 			type.genericTypes[i] = convertAliasType(type.genericTypes[i], callContext);
-		else if(type.genericTypes[i].typeKind == psymb.PTypeKind.Array && type.genericTypes[i].arrayType.typeKind == psymb.PTypeKind.Generic)
+		else if(type.genericTypes[i].typeKind == psymb.PTypeKind.Array && type.genericTypes[i].arrayType?.typeKind == psymb.PTypeKind.Generic)
 			type.genericTypes[i] =  convertArrayAliasType(type.genericTypes[i], callContext);
 		else if(type.genericTypes[i].genericTypes.length > 0)
 			type.genericTypes[i] = convertComponentAliasType(type.genericTypes[i], callContext);

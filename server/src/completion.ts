@@ -74,7 +74,7 @@ let lastScopeAtPos : psymb.PScopedSymbol | undefined;
 let lastContextType : IPType | undefined;
 let lastSymbols : psymb.PBaseSymbol [] = [];
 
-export async function collectSignatureHelp(pdeInfo: sketch.PdeContentInfo, line: number, posInLine : number, context : lsp.SignatureHelpContext): Promise<lsp.SignatureHelp | null> 
+export async function collectSignatureHelp(pdeInfo: sketch.PdeContentInfo, line: number, posInLine : number, context : lsp.SignatureHelpContext | undefined): Promise<lsp.SignatureHelp | null>
 {
 	if( !pdeInfo.syntaxTokens)
 		return null;
@@ -102,7 +102,7 @@ export async function collectSignatureHelp(pdeInfo: sketch.PdeContentInfo, line:
 
 	let methodName : string | undefined;
 	if( parseNode.parent instanceof MethodCallContext )
-		methodName = parseNode.parent.IDENTIFIER().text;
+		methodName = parseNode.parent.IDENTIFIER()?.text;
 
 	if(!methodName)
 		return null;
@@ -110,6 +110,8 @@ export async function collectSignatureHelp(pdeInfo: sketch.PdeContentInfo, line:
 	if(contextType)
 	{
 		let callContext = psymb.PUtils.resolveComponentSyncFromPType(scopeAtPos, psymb.PClassSymbol, contextType );
+		if(!callContext)
+			return null;
 		let methods = psymb.PUtils.getAllSymbolsSync(callContext, psymb.PMethodSymbol, methodName, true );
 		for(let method of methods )
 		{
@@ -120,7 +122,7 @@ export async function collectSignatureHelp(pdeInfo: sketch.PdeContentInfo, line:
 			let methodParams = method.getNestedSymbolsOfTypeSync(psymb.PParameterSymbol);
 			for(let methodParam of methodParams)
 			{
-				let paramInfo = lsp.ParameterInformation.create(methodParam.name, methodParam.type.name);
+				let paramInfo = lsp.ParameterInformation.create(methodParam.name, methodParam.type?.name);
 				parameters.push(paramInfo);
 			}
 
@@ -144,7 +146,7 @@ export async function collectSignatureHelp(pdeInfo: sketch.PdeContentInfo, line:
 	return {signatures:signatures, activeSignature:activeSignature, activeParameter: activeParam };
 }
 
-export async function collectCandidates(pdeInfo: sketch.PdeContentInfo, line: number, posInLine : number, context : lsp.CompletionContext): Promise<lsp.CompletionItem[]> 
+export async function collectCandidates(pdeInfo: sketch.PdeContentInfo, line: number, posInLine : number, context : lsp.CompletionContext | undefined): Promise<lsp.CompletionItem[]> 
 {
 	if( !pdeInfo.syntaxTokens)
 		return [];
@@ -276,10 +278,11 @@ async function suggestMembers(scopeAtPos: psymb.PScopedSymbol, refType:IPType|un
 			continue;
 
 		let methodName :string = psymb.PUtils.extractMethodName(child.name);
-		if(!methodOverrides.has(methodName))
-			methodOverrides.set(methodName, [ child ]);
+		const existing = methodOverrides.get(methodName);
+		if(existing)
+			existing.push(child);
 		else
-			methodOverrides.get(methodName).push(child);
+			methodOverrides.set(methodName, [ child ]);
 	}
 
 	for(let [ key, methods ] of methodOverrides)

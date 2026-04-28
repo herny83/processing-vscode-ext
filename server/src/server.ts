@@ -78,7 +78,8 @@ connection.onInitialize((params: InitializeParams) => {
 		const processingVersion: string | undefined = initOptions.processingVersion;
 		console.log(`processingPath: ${processingPath}`);
 		console.log(`processingVersion: ${processingVersion}`);
-		sketch.setProcessingPath(processingPath, processingVersion);
+		if (processingPath)
+			sketch.setProcessingPath(processingPath, processingVersion);
 	}
 
 	const result: InitializeResult = 
@@ -209,7 +210,8 @@ documents.onDidOpen(async (event: { document: TextDocument; }) => {
             log.write(`Invalid sketch: No main sketch file (${folderName}.pde) found in ${folderPath}`, log.severity.ERROR);
         }
     } catch (error) {
-        log.write(`Error while validating sketch: ${error.message}`, log.severity.ERROR);
+        const message = error instanceof Error ? error.message : String(error);
+        log.write(`Error while validating sketch: ${message}`, log.severity.ERROR);
     }
 });
 
@@ -349,10 +351,10 @@ connection.onRenameRequest( async (params: RenameParams): Promise<WorkspaceEdit 
 // ================================================================================================
 
 // Perform auto-completion -> Deligated tp `completion.ts`
-connection.onCompletion( async (params: CompletionParams): Promise<CompletionItem[]> => 
+connection.onCompletion( async (params: CompletionParams): Promise<CompletionItem[]> =>
 {
 	if(sketch.isRecompiling())
-		return;
+		return [];
 
 	const pdeName : string = path.basename(parseUtils.getPathFromUri(params.textDocument.uri));
 	const line : number = params.position.line;

@@ -140,9 +140,9 @@ function collectImplementationsForMethod(ownerSymbol : psymb.PComponentSymbol, m
 
 function collectReferencesForConstructor(pdeInfo : sketch.PdeContentInfo, parseNode : ast.TerminalNode, locations : Location [])
 {
-	let focusedDeclFullName : string | undefined;
-	focusedDeclFullName = pdeInfo.findNodeSymbolDefinitionName(parseNode);
-	collectReferencesForDeclarationName(focusedDeclFullName, locations);
+	const focusedDeclFullName = pdeInfo.findNodeSymbolDefinitionName(parseNode);
+	if (focusedDeclFullName)
+		collectReferencesForDeclarationName(focusedDeclFullName, locations);
 }
 
 function sortedPush(editLst: Location[], edit : Location)
