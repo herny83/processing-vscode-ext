@@ -2,12 +2,14 @@
 // optional parse-tree context, modifiers, visibility, and parent linkage,
 // plus name-based resolution that defers to the enclosing scope.
 //
-// modifiers/visibility will switch to PModifier/PMemberVisibility once all
-// call sites are flipped to the P-prefixed enums. Until then the field types
-// stay on the legacy enums to avoid a churn-only sweep across many files.
+// `modifiers` is still typed as Set<Modifier> until call sites are flipped to
+// PModifier — that's the next migration step.
+// `visibility` defaults to Public to match the codebase's "no access modifier
+// declared = treated as public" convention (see SymbolTableVisitor.evaluateMemberVisibility).
 
 import { ParseTree } from "antlr4ts/tree/ParseTree";
-import { Modifier, MemberVisibility } from "antlr4-c3";
+import { Modifier } from "antlr4-c3";
+import { PMemberVisibility } from "./PMemberVisibility";
 import type { PIScopedSymbol } from "./PIScopedSymbol";
 import type { PSymbolConstructor } from "./PSymbolConstructor";
 
@@ -16,7 +18,7 @@ export class PBaseSymbol
 	public name: string;
 	public context?: ParseTree;
 	public readonly modifiers: Set<Modifier> = new Set<Modifier>();
-	public visibility: MemberVisibility = MemberVisibility.Unknown;
+	public visibility: PMemberVisibility = PMemberVisibility.Public;
 
 	private _parent: PIScopedSymbol | undefined;
 

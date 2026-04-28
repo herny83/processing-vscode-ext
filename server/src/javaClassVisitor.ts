@@ -119,9 +119,9 @@ export class JavaClassVisitor extends ClassVisitor
 			methodSymbol.modifiers.add(symb.Modifier.Final);
 
 		if(isPublic)
-			methodSymbol.visibility = symb.MemberVisibility.Public;
+			methodSymbol.visibility = psymb.PMemberVisibility.Public;
 		else if(isProtected)
-			methodSymbol.visibility = symb.MemberVisibility.Protected;
+			methodSymbol.visibility = psymb.PMemberVisibility.Protected;
 
 		debugMethodName = "."+name+"(M)";
 		let srcMethodSignature : string = signature?signature:desc;
@@ -170,9 +170,9 @@ export class JavaClassVisitor extends ClassVisitor
 			fieldSymbol.modifiers.add(symb.Modifier.Final);
 
 		if(isPublic)
-			fieldSymbol.visibility = symb.MemberVisibility.Public;
+			fieldSymbol.visibility = psymb.PMemberVisibility.Public;
 		else if(isProtected)
-			fieldSymbol.visibility = symb.MemberVisibility.Protected;
+			fieldSymbol.visibility = psymb.PMemberVisibility.Protected;
 		
 		debugFieldName = "."+name;
 		const visitor = new TypeSignatureVisitor(symbolType);

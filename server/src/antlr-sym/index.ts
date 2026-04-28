@@ -22,3 +22,4 @@ export * from "./src/PIScopedSymbol";
 export * from "./src/PINamespaceSymbol";
 export * from "./src/PSymbolConstructor";
 export * from "./src/PReferenceKind";
+export * from "./src/PMemberVisibility";
