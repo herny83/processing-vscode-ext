@@ -1,6 +1,35 @@
-// Processing-prefixed wrapper for antlr4-c3 IScopedSymbol
-// All Processing symbol system code should use this instead of antlr4-c3 directly
+import { PBaseSymbol } from "./PBaseSymbol";
+import { PSymbolConstructor } from "./PSymbolConstructor";
 
-import { IScopedSymbol as Antlr4C3IScopedSymbol } from "antlr4-c3";
 
-export interface PIScopedSymbol extends Antlr4C3IScopedSymbol {}
+// Processing-prefixed scoped-symbol interface.
+export interface PIScopedSymbol extends PBaseSymbol
+{
+	directScopes: Promise<PIScopedSymbol[]>;
+	children: PBaseSymbol[];
+	firstChild: PBaseSymbol | undefined;
+	lastChild: PBaseSymbol | undefined;
+
+	clear(): void;
+	addSymbol(symbol: PBaseSymbol): void;
+	removeSymbol(symbol: PBaseSymbol): void;
+
+	getNestedSymbolsOfType<T extends PBaseSymbol, Args extends unknown[]>(t: PSymbolConstructor<T, Args>): Promise<T[]>;
+	getNestedSymbolsOfTypeSync<T extends PBaseSymbol, Args extends unknown[]>(t: PSymbolConstructor<T, Args>): T[];
+
+	getAllNestedSymbols(name?: string): Promise<PBaseSymbol[]>;
+	getAllNestedSymbolsSync(name?: string): PBaseSymbol[];
+
+	getSymbolsOfType<T extends PBaseSymbol, Args extends unknown[]>(t: PSymbolConstructor<T, Args>): Promise<T[]>;
+	getAllSymbols<T extends PBaseSymbol, Args extends unknown[]>(t: PSymbolConstructor<T, Args>, localOnly?: boolean): Promise<T[]>;
+	getAllSymbolsSync<T extends PBaseSymbol, Args extends unknown[]>(t: PSymbolConstructor<T, Args>, localOnly?: boolean): T[];
+
+	resolve(name: string, localOnly?: boolean): Promise<PBaseSymbol | undefined>;
+	resolveSync(name: string, localOnly?: boolean): PBaseSymbol | undefined;
+
+	symbolFromPath(path: string, separator: string): PBaseSymbol | undefined;
+	indexOfChild(child: PBaseSymbol): number;
+	nextSiblingOf(child: PBaseSymbol): PBaseSymbol | undefined;
+	previousSiblingOf(child: PBaseSymbol): PBaseSymbol | undefined;
+	nextOf(child: PBaseSymbol): PBaseSymbol | undefined;
+}

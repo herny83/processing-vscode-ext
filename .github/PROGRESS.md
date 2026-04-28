@@ -19,11 +19,11 @@ After completing a step:
 **Date**: April 27, 2026
 **Completed**:
 - 2.1.12: PINamespaceSymbol wrapper created and migrated (0 errors)
-- See PLAN.md for next step
+- Quick-win decoupling: PSymbolConstructor, PIScopedSymbol, PINamespaceSymbol now standalone (no antlr4-c3 imports). Remaining antlr4-c3 imports inside antlr-sym/ are: PBaseSymbol, PScopedSymbol, PSymbolTableBase (foundational classes) and PUtils (one `Modifier` reference, gated on PModifier activation at call sites).
 
 **Next step**: 2.2 — Verify no direct antlr4-c3 imports remain outside antlr-sym/ and generated grammar; LSP smoke test
 **Error count**: 0 baseline build across all 5 tsc projects
-**Notes**: Track A symbol-wrapper translation complete. PModifier and PMemberVisibility files exist as dormant wrappers (kept for future use; not yet used at call sites). Move to 2.2 isolation audit.
+**Notes**: PModifier and PMemberVisibility files exist as dormant standalone enums (kept for future use; call sites still use antlr4-c3 Modifier/MemberVisibility). The three remaining antlr4-c3 class imports in antlr-sym/ require reimplementing the BaseSymbol/ScopedSymbol/SymbolTable runtime — separate dedicated step.
 
 ---
 

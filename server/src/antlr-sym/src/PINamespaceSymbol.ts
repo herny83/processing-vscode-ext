@@ -1,6 +1,10 @@
-// Processing-prefixed wrapper for antlr4-c3 INamespaceSymbol
-// All Processing symbol system code should use this instead of antlr4-c3 directly
+// Processing-prefixed namespace-symbol interface.
+// Standalone — no antlr4-c3 dependency. Mirrors the antlr4-c3 INamespaceSymbol shape.
 
-import { INamespaceSymbol as Antlr4C3INamespaceSymbol } from "antlr4-c3";
+import { PIScopedSymbol } from "./PIScopedSymbol";
 
-export interface PINamespaceSymbol extends Antlr4C3INamespaceSymbol {}
+export interface PINamespaceSymbol extends PIScopedSymbol
+{
+	readonly inline: boolean;
+	readonly attributes: string[];
+}
