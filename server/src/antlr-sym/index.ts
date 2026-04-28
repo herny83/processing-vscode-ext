@@ -1,3 +1,4 @@
+export * from "./src/PMethodFlags";
 export * from "./src/PTypedSymbol";
 export * from "./src/PVariableSymbol";
 export * from "./src/PFieldSymbol";

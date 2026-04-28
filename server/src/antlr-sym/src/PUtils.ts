@@ -1,4 +1,5 @@
-import { MethodFlags, Modifier } from "antlr4-c3";
+import { Modifier } from "antlr4-c3";
+import { PMethodFlags } from "./PMethodFlags";
 import { PReferenceKind } from "./PReferenceKind";
 import { PSymbolConstructor } from "./PSymbolConstructor";
 
@@ -610,12 +611,12 @@ export class PUtils
 
 	public static setMethodLastVargs( method : PMethodSymbol)
 	{
-		method.methodFlags |= MethodFlags.Virtual;
+		method.methodFlags |= PMethodFlags.Virtual;
 	}
 
 	public static hasMethodLastVargs( method : PMethodSymbol)
 	{
-		return (method.methodFlags & MethodFlags.Virtual) != 0;
+		return (method.methodFlags & PMethodFlags.Virtual) != 0;
 	}
 
 	public static extractSignature( symbol : PBaseSymbol ) : string

@@ -1,15 +1,15 @@
-import { MethodFlags } from "antlr4-c3";
+import { PMethodFlags } from "./PMethodFlags";
 import { PScopedSymbol } from "./PScopedSymbol";
 import { PType } from "./PType"
 import { PVariableSymbol } from "./PVariableSymbol"
 import { PParameterSymbol } from "./PParameterSymbol"
 
-export { MethodFlags };
+
 
 /** A function which belongs to a class or other outer container structure. */
 export class PMethodSymbol extends PScopedSymbol
 {
-    methodFlags: MethodFlags = MethodFlags.None;
+    methodFlags: PMethodFlags = PMethodFlags.None;
 
 	returnType: PType | undefined;
 
