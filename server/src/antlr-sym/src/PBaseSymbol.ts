@@ -2,13 +2,11 @@
 // optional parse-tree context, modifiers, visibility, and parent linkage,
 // plus name-based resolution that defers to the enclosing scope.
 //
-// `modifiers` is still typed as Set<Modifier> until call sites are flipped to
-// PModifier — that's the next migration step.
 // `visibility` defaults to Public to match the codebase's "no access modifier
 // declared = treated as public" convention (see SymbolTableVisitor.evaluateMemberVisibility).
 
 import { ParseTree } from "antlr4ts/tree/ParseTree";
-import { Modifier } from "antlr4-c3";
+import { PModifier } from "./PModifier";
 import { PMemberVisibility } from "./PMemberVisibility";
 import type { PIScopedSymbol } from "./PIScopedSymbol";
 import type { PSymbolConstructor } from "./PSymbolConstructor";
@@ -17,7 +15,7 @@ export class PBaseSymbol
 {
 	public name: string;
 	public context?: ParseTree;
-	public readonly modifiers: Set<Modifier> = new Set<Modifier>();
+	public readonly modifiers: Set<PModifier> = new Set<PModifier>();
 	public visibility: PMemberVisibility = PMemberVisibility.Public;
 
 	private _parent: PIScopedSymbol | undefined;

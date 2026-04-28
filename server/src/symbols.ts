@@ -1,7 +1,6 @@
 import { ProcessingParserVisitor } from './grammer/ProcessingParserVisitor';
 import { AbstractParseTreeVisitor, ParseTree, TerminalNode } from 'antlr4ts/tree'
 import { PdeContentInfo } from "./sketch";
-import * as symb from 'antlr4-c3'
 import { PIScopedSymbol } from './antlr-sym';
 import * as pp from './grammer/ProcessingParser';
 import * as log from './syslogs'
@@ -89,7 +88,7 @@ export class SymbolTableVisitor extends AbstractParseTreeVisitor<void> implement
 		let memberModif = ctx.modifier();
 
 		let visibility : psymb.PMemberVisibility = this.evaluateMemberVisibility(memberModif);
-		let modifiers : symb.Modifier[] = this.evaluateMemberModifiers(memberModif);
+		let modifiers : psymb.PModifier[] = this.evaluateMemberModifiers(memberModif);
 		if(importDecl)
 			this.visitImportDeclaration(importDecl);
 		else if(memberDecl)
@@ -149,11 +148,11 @@ export class SymbolTableVisitor extends AbstractParseTreeVisitor<void> implement
 	visitEnhancedForControl(ctx: pp.EnhancedForControlContext)
 	{
 		let memberModif = ctx.variableModifier();
-		let modifiers : symb.Modifier[] = [];
+		let modifiers : psymb.PModifier[] = [];
 		for(let modifCtx of memberModif)
 		{
 			if( modifCtx.FINAL() )
-				modifiers.push(symb.Modifier.Final);
+				modifiers.push(psymb.PModifier.Final);
 		}
 
 		let symbolType = this.convertTypeType(ctx.typeType());
@@ -163,11 +162,11 @@ export class SymbolTableVisitor extends AbstractParseTreeVisitor<void> implement
 	visitLocalVariableDeclaration(ctx: pp.LocalVariableDeclarationContext)
 	{
 		let memberModif = ctx.variableModifier();
-		let modifiers : symb.Modifier[] = [];
+		let modifiers : psymb.PModifier[] = [];
 		for(let modifCtx of memberModif)
 		{
 			if( modifCtx.FINAL() )
-				modifiers.push(symb.Modifier.Final);
+				modifiers.push(psymb.PModifier.Final);
 		}
 		let typeCtx = ctx.typeType();
 		let symbolType = this.convertTypeType(typeCtx);
@@ -177,11 +176,11 @@ export class SymbolTableVisitor extends AbstractParseTreeVisitor<void> implement
 	visitFormalParameter(ctx: pp.FormalParameterContext)
 	{
 		let memberModif = ctx.variableModifier();
-		let modifiers : symb.Modifier[] = [];
+		let modifiers : psymb.PModifier[] = [];
 		for(let modifCtx of memberModif)
 		{
 			if( modifCtx.FINAL() )
-				modifiers.push(symb.Modifier.Final);
+				modifiers.push(psymb.PModifier.Final);
 		}
 
 		let symbolType = this.convertTypeType(ctx.typeType());
@@ -191,11 +190,11 @@ export class SymbolTableVisitor extends AbstractParseTreeVisitor<void> implement
 	visitLastFormalParameter(ctx: pp.LastFormalParameterContext)
 	{
 		let memberModif = ctx.variableModifier();
-		let modifiers : symb.Modifier[] = [];
+		let modifiers : psymb.PModifier[] = [];
 		for(let modifCtx of memberModif)
 		{
 			if( modifCtx.FINAL() )
-				modifiers.push(symb.Modifier.Final);
+				modifiers.push(psymb.PModifier.Final);
 		}
 		let ctxType = ctx.typeType();
 		let symbolType = this.convertTypeType(ctxType);
@@ -208,7 +207,7 @@ export class SymbolTableVisitor extends AbstractParseTreeVisitor<void> implement
 		this.addTypedSymbol(symbolType, ctx.variableDeclaratorId(), VAR_PARAM, psymb.PMemberVisibility.Private, modifiers);
 	}
 
-	tryDeclareField(ctx: pp.FieldDeclarationContext, visibility:psymb.PMemberVisibility, modifiers:symb.Modifier[])
+	tryDeclareField(ctx: pp.FieldDeclarationContext, visibility:psymb.PMemberVisibility, modifiers:psymb.PModifier[])
 	{
 		let fileTypeCtx = ctx.typeType();
 		let symbolType = this.convertTypeType(fileTypeCtx);
@@ -302,16 +301,16 @@ export class SymbolTableVisitor extends AbstractParseTreeVisitor<void> implement
 	visitInterfaceBodyDeclaration(ctx: pp.InterfaceBodyDeclarationContext)
 	{
 		let memberModif = ctx.modifier();
-		let modifiers : symb.Modifier[] = [];
+		let modifiers : psymb.PModifier[] = [];
 		for(let modifCtx of memberModif)
 		{
 			let interfModif = modifCtx.classOrInterfaceModifier();
 			if(interfModif)
 			{
 				if( interfModif.FINAL() )
-					modifiers.push(symb.Modifier.Final);
+					modifiers.push(psymb.PModifier.Final);
 				else if(interfModif.STATIC)
-					modifiers.push(symb.Modifier.Static);
+					modifiers.push(psymb.PModifier.Static);
 			}
 		}
 		let decl = ctx.interfaceMemberDeclaration();
@@ -346,7 +345,7 @@ export class SymbolTableVisitor extends AbstractParseTreeVisitor<void> implement
 		}
 	}
 
-	tryVisitInterfaceMethodDeclaration(typeParameters: pp.TypeParametersContext|undefined, ctx: pp.InterfaceMethodDeclarationContext, modifiers : symb.Modifier[])
+	tryVisitInterfaceMethodDeclaration(typeParameters: pp.TypeParametersContext|undefined, ctx: pp.InterfaceMethodDeclarationContext, modifiers : psymb.PModifier[])
 	{
 		return this.tryDeclareMethodRaw(typeParameters, 
 			ctx.typeTypeOrVoid(), 
@@ -358,7 +357,7 @@ export class SymbolTableVisitor extends AbstractParseTreeVisitor<void> implement
 			modifiers);
 	}
 
-	tryVisitGenericInterfaceMethodDeclaration(ctx: pp.GenericInterfaceMethodDeclarationContext, modifiers : symb.Modifier[])
+	tryVisitGenericInterfaceMethodDeclaration(ctx: pp.GenericInterfaceMethodDeclarationContext, modifiers : psymb.PModifier[])
 	{
 		let typeParams = ctx.typeParameters();
 		let methodDeclCtx = ctx.interfaceMethodDeclaration();
@@ -382,7 +381,7 @@ export class SymbolTableVisitor extends AbstractParseTreeVisitor<void> implement
 		return this.tryDeclareEnum(ctx, undefined, []);
 	}
 
-	tryDeclareMethod(typeParameters: pp.TypeParametersContext|undefined, ctx: pp.MethodDeclarationContext, visibility:psymb.PMemberVisibility, modifiers:symb.Modifier[])
+	tryDeclareMethod(typeParameters: pp.TypeParametersContext|undefined, ctx: pp.MethodDeclarationContext, visibility:psymb.PMemberVisibility, modifiers:psymb.PModifier[])
 	{
 		return this.tryDeclareMethodRaw(typeParameters, 
 										ctx.typeTypeOrVoid(), 
@@ -401,7 +400,7 @@ export class SymbolTableVisitor extends AbstractParseTreeVisitor<void> implement
 						exceptions: pp.QualifiedNameListContext|undefined,
 						body : pp.BlockContext|undefined,
 						visibility:psymb.PMemberVisibility, 
-						modifiers:symb.Modifier[])
+						modifiers:psymb.PModifier[])
 	{
 
 		let methodName : string = identif.text;
@@ -452,7 +451,7 @@ export class SymbolTableVisitor extends AbstractParseTreeVisitor<void> implement
 		}
 	}
 
-	tryDeclareGenericMethod(ctx: pp.GenericMethodDeclarationContext, visibility:psymb.PMemberVisibility, modifiers:symb.Modifier[])
+	tryDeclareGenericMethod(ctx: pp.GenericMethodDeclarationContext, visibility:psymb.PMemberVisibility, modifiers:psymb.PModifier[])
 	{
 		let genericParams = ctx.typeParameters();
 		let methodDecl = ctx.methodDeclaration();
@@ -494,7 +493,7 @@ export class SymbolTableVisitor extends AbstractParseTreeVisitor<void> implement
 	tryDeclareConstructor(	typeParameters: pp.TypeParametersContext|undefined,
 							ctx: pp.ConstructorDeclarationContext, 
 							visibility:psymb.PMemberVisibility, 
-							modifiers:symb.Modifier[])
+							modifiers:psymb.PModifier[])
 	{
 		return this.tryDeclareMethodRaw(typeParameters, 
 										undefined, 
@@ -506,14 +505,14 @@ export class SymbolTableVisitor extends AbstractParseTreeVisitor<void> implement
 										modifiers);
 	}
 
-	tryDeclareGenericConstructor(ctx: pp.GenericConstructorDeclarationContext, visibility:psymb.PMemberVisibility, modifiers:symb.Modifier[])
+	tryDeclareGenericConstructor(ctx: pp.GenericConstructorDeclarationContext, visibility:psymb.PMemberVisibility, modifiers:psymb.PModifier[])
 	{
 		let typeParameters = ctx.typeParameters();
 		let constDecl = ctx.constructorDeclaration();
 		this.tryDeclareConstructor(typeParameters, constDecl, visibility, modifiers);
 	}
 
-	tryDeclareEnum(ctx: pp.EnumDeclarationContext, visibility:psymb.PMemberVisibility, modifiers:symb.Modifier[])
+	tryDeclareEnum(ctx: pp.EnumDeclarationContext, visibility:psymb.PMemberVisibility, modifiers:psymb.PModifier[])
 	{
 		let enumID = ctx.IDENTIFIER();
 		let implCtx = ctx.typeList();
@@ -563,7 +562,7 @@ export class SymbolTableVisitor extends AbstractParseTreeVisitor<void> implement
 
 		let enumArrayType = psymb.PType.createArrayType(psymb.PType.createFromIType(enumSymbol));
 		let valuesMethod = new psymb.PMethodSymbol("values", enumArrayType);
-		valuesMethod.modifiers.add(symb.Modifier.Static);
+		valuesMethod.modifiers.add(psymb.PModifier.Static);
 		this.addChildSymbol(undefined, valuesMethod);
 		let signatureString = psymb.PUtils.convertToSignature(valuesMethod);
 		valuesMethod.name = "values" + signatureString;
@@ -684,11 +683,11 @@ export class SymbolTableVisitor extends AbstractParseTreeVisitor<void> implement
 		let identif = ctx.IDENTIFIER();
 
 		let memberModif = ctx.variableModifier();
-		let modifiers : symb.Modifier[] = [];
+		let modifiers : psymb.PModifier[] = [];
 		for(let modifCtx of memberModif)
 		{
 			if( modifCtx.FINAL() )
-				modifiers.push(symb.Modifier.Final);
+				modifiers.push(psymb.PModifier.Final);
 		}
 		let savedSymbol = this.scope;
 		let catchSymbol : psymb.PScopedSymbol = new psymb.PScopedSymbol("catch"+ctx.start.startIndex);
@@ -725,7 +724,7 @@ export class SymbolTableVisitor extends AbstractParseTreeVisitor<void> implement
 	// PROTECTED HELPER FUNCTIONS
 	// =============================================================
 
-	protected addScope(ctx: ParseTree, newSymbol: psymb.PScopedSymbol, action: () => symb.SymbolTable)
+	protected addScope(ctx: ParseTree, newSymbol: psymb.PScopedSymbol, action: () => psymb.PSymbolTableBase)
 	{
 		
 		try {
@@ -758,7 +757,7 @@ export class SymbolTableVisitor extends AbstractParseTreeVisitor<void> implement
 
 	}
 
-	protected addTypedSymbols(symbolType : psymb.PType, ctx: pp.VariableDeclaratorsContext, kind : number = 1, visibility:psymb.PMemberVisibility, modifiers:symb.Modifier[] )
+	protected addTypedSymbols(symbolType : psymb.PType, ctx: pp.VariableDeclaratorsContext, kind : number = 1, visibility:psymb.PMemberVisibility, modifiers:psymb.PModifier[] )
 	{
 		let variableDeclarators : pp.VariableDeclaratorContext [] = ctx.variableDeclarator();
 		for( let i:number=0; i < variableDeclarators.length; i++ )
@@ -768,14 +767,14 @@ export class SymbolTableVisitor extends AbstractParseTreeVisitor<void> implement
 			let initializer = varDeclarator.variableInitializer();
 
 			let constantValue:string|undefined;
-			if(psymb.PUtils.hasModifier(modifiers, symb.Modifier.Final) && initializer)
+			if(psymb.PUtils.hasModifier(modifiers, psymb.PModifier.Final) && initializer)
 				constantValue = initializer.text;
 
 			this.addTypedSymbol(symbolType, decl, kind, visibility, modifiers, constantValue);
 		}
 	}
 
-	protected addTypedSymbol(varType : psymb.PType, ctx: pp.VariableDeclaratorIdContext, kind : number = 1, visibility:psymb.PMemberVisibility, modifiers:symb.Modifier[], val:string|null=null )
+	protected addTypedSymbol(varType : psymb.PType, ctx: pp.VariableDeclaratorIdContext, kind : number = 1, visibility:psymb.PMemberVisibility, modifiers:psymb.PModifier[], val:string|null=null )
 	{
 		let terminalNode = ctx.IDENTIFIER();
 		let arraySize = ctx.LBRACK().length;
@@ -841,24 +840,24 @@ export class SymbolTableVisitor extends AbstractParseTreeVisitor<void> implement
 		}
 		return result;
 	}
-	evaluateMemberModifiers(memberModifiers: pp.ModifierContext[]) : symb.Modifier[]
+	evaluateMemberModifiers(memberModifiers: pp.ModifierContext[]) : psymb.PModifier[]
 	{
-		let result : symb.Modifier[] = [];
+		let result : psymb.PModifier[] = [];
 		for(let memberModif of memberModifiers)
 		{
 			let actualModif = memberModif.classOrInterfaceModifier();
 			if(!actualModif)
 				continue;
 			if(actualModif.STATIC())
-				result.push( symb.Modifier.Static );
+				result.push( psymb.PModifier.Static );
 			if(actualModif.FINAL())
-				result.push( symb.Modifier.Final );
+				result.push( psymb.PModifier.Final );
 			if(actualModif.ABSTRACT())
-				result.push( symb.Modifier.Abstract );
+				result.push( psymb.PModifier.Abstract );
 		}
 		return result;
 	}
-	applyModifiers(symbol: psymb.PBaseSymbol, visibility:psymb.PMemberVisibility, modifiers:symb.Modifier[])
+	applyModifiers(symbol: psymb.PBaseSymbol, visibility:psymb.PMemberVisibility, modifiers:psymb.PModifier[])
 	{
 		symbol.visibility = visibility;
 		symbol.modifiers.clear();

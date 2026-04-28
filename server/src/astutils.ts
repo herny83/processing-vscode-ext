@@ -1,6 +1,5 @@
 import { ParseTree, TerminalNode } from 'antlr4ts/tree'
 import { ParserRuleContext, Token } from 'antlr4ts';
-import * as symb from 'antlr4-c3';
 import * as psymb from "./antlr-sym"
 import * as ls from 'vscode-languageserver';
 import * as pp from './grammer/ProcessingParser';

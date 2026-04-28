@@ -1,7 +1,6 @@
 import { ClassVisitor, Opcodes } from "@xmcl/asm"
 import { SignatureReader }  from './grammer/SignatureReader'
 import { SignatureVisitor }  from './grammer/SignatureVisitor'
-import * as symb from 'antlr4-c3'
 import { PReferenceKind } from './antlr-sym';
 import * as psymb from "./antlr-sym"
 
@@ -114,9 +113,9 @@ export class JavaClassVisitor extends ClassVisitor
 		this.componentSymbol.addSymbol( methodSymbol );
 
 		if(isStatic)
-			methodSymbol.modifiers.add(symb.Modifier.Static);
+			methodSymbol.modifiers.add(psymb.PModifier.Static);
 		if(isFinal)
-			methodSymbol.modifiers.add(symb.Modifier.Final);
+			methodSymbol.modifiers.add(psymb.PModifier.Final);
 
 		if(isPublic)
 			methodSymbol.visibility = psymb.PMemberVisibility.Public;
@@ -165,9 +164,9 @@ export class JavaClassVisitor extends ClassVisitor
 		this.componentSymbol.addSymbol( fieldSymbol );
 
 		if(isStatic)
-			fieldSymbol.modifiers.add(symb.Modifier.Static);
+			fieldSymbol.modifiers.add(psymb.PModifier.Static);
 		if(isFinal)
-			fieldSymbol.modifiers.add(symb.Modifier.Final);
+			fieldSymbol.modifiers.add(psymb.PModifier.Final);
 
 		if(isPublic)
 			fieldSymbol.visibility = psymb.PMemberVisibility.Public;

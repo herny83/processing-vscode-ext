@@ -113,7 +113,7 @@ export async function collectSignatureHelp(pdeInfo: sketch.PdeContentInfo, line:
 		let methods = psymb.PUtils.getAllSymbolsSync(callContext, psymb.PMethodSymbol, methodName, true );
 		for(let method of methods )
 		{
-			   if(contextType.reference == PReferenceKind.Reference && !method.modifiers.has(symb.Modifier.Static))
+			   if(contextType.reference == PReferenceKind.Reference && !method.modifiers.has(psymb.PModifier.Static))
 				continue;
 
 			const parameters: lsp.ParameterInformation[] = [];
@@ -256,7 +256,7 @@ async function suggestMembers(scopeAtPos: psymb.PScopedSymbol, refType:IPType|un
 	let vars = psymb.PUtils.getAllSymbolsSync(scopeAtPos, psymb.PVariableSymbol, undefined, localOnly);
 	for(let child of vars )
 	{
-		if(isAccessingByReference && !child.modifiers.has(symb.Modifier.Static))
+		if(isAccessingByReference && !child.modifiers.has(psymb.PModifier.Static))
 			continue;
 
 		if(child instanceof psymb.PFieldSymbol)
@@ -269,7 +269,7 @@ async function suggestMembers(scopeAtPos: psymb.PScopedSymbol, refType:IPType|un
 	let methodOverrides : Map<string, psymb.PMethodSymbol []> = new Map<string, psymb.PMethodSymbol []>();
 	for(let child of methods )
 	{
-		if(isAccessingByReference && !child.modifiers.has(symb.Modifier.Static))
+		if(isAccessingByReference && !child.modifiers.has(psymb.PModifier.Static))
 			continue;
 		// don't allow constructors when accessing by context
 		if(child.returnType == undefined)
@@ -306,7 +306,7 @@ async function suggestMembers(scopeAtPos: psymb.PScopedSymbol, refType:IPType|un
 	let components : psymb.PComponentSymbol [] = psymb.PUtils.getAllSymbolsSync(scopeAtPos, psymb.PComponentSymbol, undefined, localOnly);
 	for(let comp of components )
 	{
-		if(isAccessingByReference && !comp.modifiers.has(symb.Modifier.Static))
+		if(isAccessingByReference && !comp.modifiers.has(psymb.PModifier.Static))
 			continue;
 
 		if(comp instanceof psymb.PInterfaceSymbol)

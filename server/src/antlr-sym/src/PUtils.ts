@@ -1,4 +1,4 @@
-import { Modifier } from "antlr4-c3";
+import { PModifier } from "./PModifier";
 import { PMethodFlags } from "./PMethodFlags";
 import { PReferenceKind } from "./PReferenceKind";
 import { PSymbolConstructor } from "./PSymbolConstructor";
@@ -122,7 +122,7 @@ export class PUtils
 		}
 	}
 
-	public static hasModifier(modifiers:Modifier[], find:Modifier) : boolean
+	public static hasModifier(modifiers:PModifier[], find:PModifier) : boolean
 	{
 		for(let mod of modifiers)
 		{

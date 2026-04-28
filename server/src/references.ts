@@ -3,7 +3,6 @@ import { Location, Range } from 'vscode-languageserver'
 import { ParserRuleContext } from 'antlr4ts'
 import * as parseUtils from './astutils'
 import * as ast from 'antlr4ts/tree'
-import * as symb from 'antlr4-c3'
 import * as sketch from './sketch'
 import * as psymb from './antlr-sym';
 import { MethodDeclarationContext } from './grammer/ProcessingParser';

@@ -5,7 +5,6 @@ import { SymbolTableVisitor } from './symbols';
 import * as server from './server'
 import { ParseTree, TerminalNode } from 'antlr4ts/tree'
 import { ParserRuleContext } from 'antlr4ts';
-import * as symb from 'antlr4-c3'
 import { PIScopedSymbol } from './antlr-sym';
 import * as dm from './definitionsMap'
 import * as lsp from 'vscode-languageserver'
@@ -118,7 +117,7 @@ export class PdeContentInfo implements IDiagnosticReporter
 			if( !(comp instanceof psymb.PFieldSymbol) && 
 			   	!(comp instanceof psymb.PMethodSymbol) )
 				continue;
-			if(comp.modifiers.has(symb.Modifier.Static))
+			if(comp.modifiers.has(psymb.PModifier.Static))
 				this.importedStaticSymbols.push(comp);
 		}
 	}

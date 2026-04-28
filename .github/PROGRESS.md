@@ -21,13 +21,15 @@ After completing a step:
 - 2.1.12: PINamespaceSymbol wrapper created and migrated (0 errors)
 - Quick-win decoupling: PSymbolConstructor, PIScopedSymbol, PINamespaceSymbol now standalone.
 - PSymbolTableBase pivoted to extend PScopedSymbol with inlined `PSymbolTableOptions`.
-- **PBaseSymbol and PScopedSymbol fully migrated to standalone classes**. Caller sweep across 10 files replaced symb.BaseSymbol → psymb.PBaseSymbol, symb.ScopedSymbol → psymb.PScopedSymbol, including `new symb.ScopedSymbol(...)` constructions in symbols.ts.
-- Cleaned up antlr4-c3 mentions in antlr-sym/ comments — replaced wrapper headers with context-relevant docs (purpose, defaults, omitted features).
-- **PMemberVisibility activated**. PBaseSymbol.visibility now typed as PMemberVisibility (default `Public`, matching `evaluateMemberVisibility`'s "no modifier = public" behavior). Sweep of symbols.ts and javaClassVisitor.ts replaced all `symb.MemberVisibility.X` → `psymb.PMemberVisibility.X`. PMemberVisibility now exported from antlr-sym/index.ts.
+- **PBaseSymbol and PScopedSymbol fully migrated to standalone classes**. Caller sweep across 10 files replaced symb.BaseSymbol → psymb.PBaseSymbol, symb.ScopedSymbol → psymb.PScopedSymbol.
+- Cleaned up antlr4-c3 mentions in antlr-sym/ comments — replaced wrapper headers with context-relevant docs.
+- **PMemberVisibility activated**. PBaseSymbol.visibility typed as PMemberVisibility (default `Public`). Sweep flipped `symb.MemberVisibility.X` → `psymb.PMemberVisibility.X`.
+- **PModifier activated**. PBaseSymbol.modifiers typed as `Set<PModifier>`, PUtils.hasModifier signature flipped, callers swept across 4 files (completion, javaClassVisitor, symbols, sketch). Plus a leftover `symb.SymbolTable` return type in symbols.ts:728 flipped to `psymb.PSymbolTableBase` (now exported from index).
+- **Removed unused antlr4-c3 imports from 8 caller files** (astutils, definitionsMap, hover, javaClassVisitor, references, rename, sketch, symbols). Only [completion.ts:8](server/src/completion.ts#L8) keeps `import * as symb from 'antlr4-c3'` for `symb.CodeCompletionCore` (parser/code-completion feature — unrelated to the symbol system).
 
-**Next step**: Activate PModifier — last enum migration. Then 2.2 — verify no direct antlr4-c3 imports remain outside antlr-sym/ and generated grammar; LSP smoke test.
+**Next step**: 2.2 — full audit/LSP smoke test. After that, Track B (2.3) strict-mode cleanup of antlr-sym/, Track C (2.4) strict cleanup of remaining server files, Track D (2.5) enable `"strict": true`.
 **Error count**: 0 baseline build across all 5 tsc projects
-**Notes**: antlr4-c3 imports inside antlr-sym/ are now down to **just `Modifier`**: PBaseSymbol.ts:11 and PUtils.ts:1. Outside antlr-sym/, callers still import `* as symb from 'antlr4-c3'` for `symb.Modifier` (completion, javaClassVisitor, symbols), `symb.CodeCompletionCore` (completion), and a few unused holdovers (astutils, hover, references, rename, definitionsMap, sketch — TS6133 hints, cosmetic cleanup). One pre-existing strict-mode-only error at symbols.ts:382 (`tryDeclareEnum(ctx, undefined, [])` — visibility was always wrong-typed, hidden by non-strict mode); belongs to Track C strict cleanup.
+**Notes**: antlr4-c3 is now **fully gone from antlr-sym/** AND **gone from 8 of 9 caller files**. The single remaining import (completion.ts) is the genuine, isolated antlr4-c3 use case. The pre-existing strict-mode error at symbols.ts:382 (`tryDeclareEnum(ctx, undefined, [])`) still belongs to Track C strict cleanup.
 
 ---
 

@@ -4,7 +4,6 @@ import { PComponentSymbol } from './antlr-sym/src/PComponentSymbol';
 import { PdeContentInfo } from "./sketch";
 import { Token } from 'antlr4ts'
 import { Range } from 'vscode-languageserver'
-import * as symb from 'antlr4-c3'
 import { PReferenceKind } from './antlr-sym';
 import { PIScopedSymbol } from './antlr-sym';
 import * as pp from './grammer/ProcessingParser';

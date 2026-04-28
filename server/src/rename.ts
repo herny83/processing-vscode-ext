@@ -4,7 +4,6 @@ import * as reference from './references';
 import * as parseUtils from './astutils'
 import * as psymb from './antlr-sym'
 import * as sketch from './sketch';
-import * as symb from 'antlr4-c3'
 import * as path from 'path';
 
 export async function scheduleLookUpRename(pdeInfo : sketch.PdeContentInfo, line : number, pos : number, newName: string) : Promise<WorkspaceEdit> 
