@@ -4,9 +4,7 @@
         "esModuleInterop": true,
         "module": "esnext",
         "moduleResolution": "bundler",
-        "sourceMap": true,
-        "outDir": "out",
-        "rootDir": "src"
+        "noEmit": true
     },
     "include": ["src"],
     "exclude": ["grammar", "node_modules", ".vscode-test"]

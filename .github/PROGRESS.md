@@ -72,7 +72,7 @@ Work that came up between Phase 1 completion and starting Phase 2. Not part of a
 - [x] **2.1.11** Translate Modifier to new antlr-sym PModifier.ts and update all references — 2026-04-27: Completed migration to PModifier, updated all references, validated build (0 errors)
 - [x] **2.1.12** Translate INamespaceSymbol to new antlr-sym PINamespaceSymbol.ts and update all references — 2026-04-27: Created PINamespaceSymbol thin wrapper interface (extends antlr4-c3 INamespaceSymbol), swapped the only reference in PNamespaceSymbol.ts, added export to index.ts, validated all builds (0 errors)
 
-- [ ] **2.2** Verify no direct antlr4-c3 imports remain outside antlr-sym/ and generated grammar; LSP smoke test
+- [x] **2.2** Verify no direct antlr4-c3 imports remain outside antlr-sym/ and generated grammar; LSP smoke test — 2026-04-27: Audit complete, only completion.ts uses antlr4-c3 for CodeCompletionCore (parser only, not symbol system). All builds clean, LSP smoke test passed.
 
 ### Track B: `server/src/antlr-sym/` strict cleanup (parallel with A)
 

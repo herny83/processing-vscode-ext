@@ -1159,16 +1159,35 @@ function findJdkCtSym(jdkParentDir: string): string | undefined
 	return undefined;
 }
 
-export function resolveJavaFromLibraries(javaPath: string): string | undefined 
+export function resolveJavaFromLibraries(javaPath: string): string | undefined
 {
 	const projectSettings = settings.getLastCached();
 	const librarySourcePaths = projectSettings['processing.librarySourcePaths'] || [];
 
-	for (const srcPath of librarySourcePaths) 
+	for (const srcPath of librarySourcePaths)
 	{
 		const fullPath = path.join(sketchPath, srcPath, javaPath);
 		if (fs.existsSync(fullPath))
 			return fullPath;
 	}
 	return undefined;
+}
+
+export function dispose()
+{
+	if (codeFolderChangeDebounceTimer)
+	{
+		clearTimeout(codeFolderChangeDebounceTimer);
+		codeFolderChangeDebounceTimer = null;
+	}
+	if (codeFolderContentWatcher)
+	{
+		codeFolderContentWatcher.close();
+		codeFolderContentWatcher = null;
+	}
+	if (codeFolderWatcher)
+	{
+		codeFolderWatcher.close();
+		codeFolderWatcher = null;
+	}
 }

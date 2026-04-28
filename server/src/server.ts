@@ -436,6 +436,19 @@ connection.onDocumentSymbol(async (params: DocumentSymbolParams) =>
 
 
 
+let shutdownRequested = false;
+
+connection.onShutdown(async () => {
+	shutdownRequested = true;
+	log.write("Server shutdown requested", log.severity.EVENT);
+	sketch.dispose();
+	settings.dispose();
+});
+
+connection.onExit(() => {
+	process.exit(shutdownRequested ? 0 : 1);
+});
+
 documents.listen(connection);
 connection.listen();
 

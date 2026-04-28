@@ -3,9 +3,7 @@
 		"module": "esnext",
 		"moduleResolution": "bundler",
 		"target": "es6",
-		"outDir": "out",
-		"rootDir": "src",
-		"sourceMap": true,
+		"noEmit": true,
 		"strict": true
 	},
 	"include": ["src"],

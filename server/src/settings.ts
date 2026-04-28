@@ -60,6 +60,20 @@ function onVsCodeFolderContentChanged(eventType : fs.WatchEventType, filename: s
 		readAndCacheSettings();
 }
 
+export function dispose()
+{
+	if (vscodeWatcher)
+	{
+		vscodeWatcher.close();
+		vscodeWatcher = undefined;
+	}
+	if (parentWatcher)
+	{
+		parentWatcher.close();
+		parentWatcher = undefined;
+	}
+}
+
 function readAndCacheSettings()
 {
 	const settingsFileUri = parseUtils.getUriFromPath(settingsFile);

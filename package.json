@@ -252,7 +252,7 @@
     "build:server": "tsc -p server",
     "build:debugger": "tsc -p debugger",
     "build:shared": "tsc -p shared",
-    "build": "npm run build:client && npm run build:server && npm run build:debugger && npm run build:shared && tsc -p .",
+    "build": "npm run build:client && npm run build:server && npm run build:debugger && npm run build:shared && tsc -p . && npm run build:bundle",
     "watch:client": "tsc -p client --watch",
     "watch:server": "tsc -p server --watch",
     "watch:debugger": "tsc -p debugger --watch",
