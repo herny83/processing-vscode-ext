@@ -18,12 +18,12 @@ After completing a step:
 
 **Date**: April 27, 2026
 **Completed**:
-- 2.1.9:  (0 errors)
+- 2.1.12: PINamespaceSymbol wrapper created and migrated (0 errors)
 - See PLAN.md for next step
 
-**Next step**: 2.1.7 — Translate Type to new antlr-sym PTypeBase.ts and update all references
-**Error count**: 0 baseline build; 143 strict-mode errors remaining (all in server: 106 top-level + 37 in antlr-sym/)
-**Notes**: All workspaces build clean. Continue Track A with next symbol wrapper.
+**Next step**: 2.2 — Verify no direct antlr4-c3 imports remain outside antlr-sym/ and generated grammar; LSP smoke test
+**Error count**: 0 baseline build across all 5 tsc projects
+**Notes**: Track A symbol-wrapper translation complete. PModifier and PMemberVisibility files exist as dormant wrappers (kept for future use; not yet used at call sites). Move to 2.2 isolation audit.
 
 ---
 
@@ -63,8 +63,8 @@ Work that came up between Phase 1 completion and starting Phase 2. Not part of a
 - [x] **2.1.8** Translate TypeKind to new antlr-sym PTypeKind.ts and update all references
 - [x] **2.1.9** Translate ReferenceKind to new antlr-sym PReferenceKind.ts and update all references
 - [x] **2.1.10** Translate MethodFlags to new antlr-sym PMethodFlags.ts and update all references — 2026-04-27: Now includes all Java method-level modifiers (Virtual, Abstract, Final, Static, Synchronized, Native, Strictfp) for full Processing/Java compatibility. All references migrated, build validated.
-- [ ] **2.1.11** Translate Modifier to new antlr-sym PModifier.ts and update all references
-- [ ] **2.1.12** Translate INamespaceSymbol to new antlr-sym PINamespaceSymbol.ts and update all references
+- [x] **2.1.11** Translate Modifier to new antlr-sym PModifier.ts and update all references — 2026-04-27: Completed migration to PModifier, updated all references, validated build (0 errors)
+- [x] **2.1.12** Translate INamespaceSymbol to new antlr-sym PINamespaceSymbol.ts and update all references — 2026-04-27: Created PINamespaceSymbol thin wrapper interface (extends antlr4-c3 INamespaceSymbol), swapped the only reference in PNamespaceSymbol.ts, added export to index.ts, validated all builds (0 errors)
 
 - [ ] **2.2** Verify no direct antlr4-c3 imports remain outside antlr-sym/ and generated grammar; LSP smoke test
 

@@ -1,8 +1,8 @@
-import { INamespaceSymbol } from "antlr4-c3";
+import { PINamespaceSymbol } from "./PINamespaceSymbol";
 import { PComponentSymbol } from "./PComponentSymbol"
 
 
-export class PNamespaceSymbol extends PComponentSymbol  implements INamespaceSymbol
+export class PNamespaceSymbol extends PComponentSymbol  implements PINamespaceSymbol
 {
 	readonly inline: boolean;
     readonly attributes: string[];
