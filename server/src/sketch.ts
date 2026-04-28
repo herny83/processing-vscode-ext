@@ -38,7 +38,7 @@ let codeFolderChangeDebounceTimer: NodeJS.Timeout | null = null;
 
 
 let dirtyPdeCount = 0;
-let processedSketchTokens : ProcessingSketchContext
+let processedSketchTokens! : ProcessingSketchContext
 
 let symbolTableVisitor : SymbolTableVisitor;
 let mainSymbolTable : psymb.PSymbolTable = new psymb.PSymbolTable("", { allowDuplicateSymbols: true });
@@ -188,7 +188,8 @@ export class PdeContentInfo implements IDiagnosticReporter
 		}
 		catch(e)
 		{
-			console.error("Unable to parse pde file.\n"+e.stack);
+			const stack = e instanceof Error ? e.stack : String(e);
+			console.error("Unable to parse pde file.\n"+stack);
 		}
 		finally
 		{
@@ -437,7 +438,7 @@ export class PdeContentInfo implements IDiagnosticReporter
 						console.error(`Unable to fix component type: ${type.name} at ... ${this.name}`);
 				}
 			}
-			else if(type.typeKind == psymb.PTypeKind.Array)
+			else if(type.typeKind == psymb.PTypeKind.Array && type.arrayType)
 				this.tryFixComponentType(type.arrayType, scope);
 			
 			for(let i:number=0; i < type.genericTypes.length; i++ )
@@ -558,7 +559,7 @@ export async function initialize(workspacePath: string)
 	return true;
 }
 
-function checkForCodeFolderCreationDeletion(eventType: fs.WatchEventType, filename: string) 
+function checkForCodeFolderCreationDeletion(eventType: fs.WatchEventType, filename: string | null)
 {
 	if (filename !== 'code')
 		return;
@@ -566,9 +567,9 @@ function checkForCodeFolderCreationDeletion(eventType: fs.WatchEventType, filena
 	scheduleHandleCodeFolderChanges();
 }
 
-function checkForCodeFolderChanges(eventType: fs.WatchEventType, filename: string) 
+function checkForCodeFolderChanges(eventType: fs.WatchEventType, filename: string | null)
 {
-	if (filename.endsWith('.jar')==false)
+	if (!filename || filename.endsWith('.jar')==false)
 		return;
 
 	if(eventType === 'rename' || eventType === 'change')
@@ -959,7 +960,9 @@ export function removePdeFromSketch(uri: string)
 	if (fileName.endsWith('.pde') && pdeMap.has(fileName))
 	{
 		const pdeName : string = pathM.basename(parseUtils.getPathFromUri(uri));
-		let pde : PdeContentInfo = getPdeContentInfo(pdeName);
+		const pde = getPdeContentInfo(pdeName);
+		if (!pde)
+			return;
 		pde.removeSymbolsFromMainClass();
 		pde.clearDiagnostics();
 		pdeMap.delete(fileName);

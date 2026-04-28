@@ -64,7 +64,7 @@ export class SymbolTableVisitor extends AbstractParseTreeVisitor<void> implement
 
 	popScope()
 	{
-		this.scope = this.scopeStack.pop();
+		this.scope = this.scopeStack.pop() ?? this.mainClass;
 	}
 
 	public visitPdeLinked(pdeInfo: PdeContentInfo)
@@ -138,11 +138,11 @@ export class SymbolTableVisitor extends AbstractParseTreeVisitor<void> implement
 
 		let result : string | undefined;
 		if(staticImport)
-			result = this.pdeInfo.tryImportStatic(fullName, allMembers);
+			result = this.pdeInfo?.tryImportStatic(fullName, allMembers);
 		else
-			result = this.pdeInfo.tryImport(fullName, allMembers);
+			result = this.pdeInfo?.tryImport(fullName, allMembers);
 		if(result)
-			this.pdeInfo.notifyDiagnostic(result, ctx);
+			this.pdeInfo?.notifyDiagnostic(result, ctx);
 	} 
 
 	visitEnhancedForControl(ctx: pp.EnhancedForControlContext)
@@ -228,7 +228,7 @@ export class SymbolTableVisitor extends AbstractParseTreeVisitor<void> implement
 		if(extendsCtx)
 		{
 			ext = this.convertTypeType(extendsCtx);
-			this.pdeInfo.addUnresolvedType(ext, this.scope);
+			this.pdeInfo?.addUnresolvedType(ext, this.scope);
 		}
 		else
 			ext = psymb.PType.createObjectType();
@@ -239,7 +239,7 @@ export class SymbolTableVisitor extends AbstractParseTreeVisitor<void> implement
 		for(let interf of impl)
 		{
 			interf.typeKind = psymb.PTypeKind.Interface;
-			this.pdeInfo.addUnresolvedType(interf, this.scope);
+			this.pdeInfo?.addUnresolvedType(interf, this.scope);
 		}
 
 		let savedScope = this.scope;
@@ -309,7 +309,7 @@ export class SymbolTableVisitor extends AbstractParseTreeVisitor<void> implement
 			{
 				if( interfModif.FINAL() )
 					modifiers.push(psymb.PModifier.Final);
-				else if(interfModif.STATIC)
+				else if(interfModif.STATIC())
 					modifiers.push(psymb.PModifier.Static);
 			}
 		}
@@ -378,7 +378,7 @@ export class SymbolTableVisitor extends AbstractParseTreeVisitor<void> implement
 
 	visitEnumDeclaration(ctx: pp.EnumDeclarationContext)
 	{
-		return this.tryDeclareEnum(ctx, undefined, []);
+		return this.tryDeclareEnum(ctx, psymb.PMemberVisibility.PackagePrivate, []);
 	}
 
 	tryDeclareMethod(typeParameters: pp.TypeParametersContext|undefined, ctx: pp.MethodDeclarationContext, visibility:psymb.PMemberVisibility, modifiers:psymb.PModifier[])
@@ -530,7 +530,7 @@ export class SymbolTableVisitor extends AbstractParseTreeVisitor<void> implement
 		this.addChildSymbol(ctx, enumSymbol);
 		this.scope = enumSymbol;
 
-		let enumContantArray = enumMembers.enumConstant();
+		let enumContantArray = enumMembers ? enumMembers.enumConstant() : [];
 		for(let enumConstant of enumContantArray)
 		{
 			let enumMemberID = enumConstant.IDENTIFIER();
@@ -617,7 +617,7 @@ export class SymbolTableVisitor extends AbstractParseTreeVisitor<void> implement
 		// let continueToken = ctx.CONTINUE();
 		// let identifier = ctx.IDENTIFIER();
 
-		if(ctx._blockLabel)
+		if(ctx._blockLabel && blockStatement)
 			this.visitBlock(blockStatement);
 		else if(ifToken)
 		{
@@ -643,7 +643,8 @@ export class SymbolTableVisitor extends AbstractParseTreeVisitor<void> implement
 			if(resources)
 				this.visitChildren(resources);
 
-			this.visitBlock(blockStatement);
+			if(blockStatement)
+				this.visitBlock(blockStatement);
 
 			let catchCtx = ctx.catchClause();
 			let finallyCtx = ctx.finallyBlock();
@@ -668,7 +669,7 @@ export class SymbolTableVisitor extends AbstractParseTreeVisitor<void> implement
 			for(let i=0; i< switchLabels.length; i++ )
 				this.visitChildren(switchLabels[i]);
 		}
-		else if(syncToken)
+		else if(syncToken && blockStatement)
 			this.visitBlock(blockStatement);
 		else if(ctx._identifierLabel)
 		{
@@ -747,7 +748,7 @@ export class SymbolTableVisitor extends AbstractParseTreeVisitor<void> implement
 		}
 	}
 
-	protected addChildSymbol(ctx: ParseTree, newSymbol: psymb.PBaseSymbol, ignoreRegisterSymbol:boolean=false)
+	protected addChildSymbol(ctx: ParseTree | undefined, newSymbol: psymb.PBaseSymbol, ignoreRegisterSymbol:boolean=false)
 	{
 		newSymbol.context = ctx;
 		this.scope.addSymbol(newSymbol);
