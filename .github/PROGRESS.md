@@ -19,11 +19,12 @@ After completing a step:
 **Date**: April 27, 2026
 **Completed**:
 - 2.1.12: PINamespaceSymbol wrapper created and migrated (0 errors)
-- Quick-win decoupling: PSymbolConstructor, PIScopedSymbol, PINamespaceSymbol now standalone (no antlr4-c3 imports). Remaining antlr4-c3 imports inside antlr-sym/ are: PBaseSymbol, PScopedSymbol, PSymbolTableBase (foundational classes) and PUtils (one `Modifier` reference, gated on PModifier activation at call sites).
+- Quick-win decoupling: PSymbolConstructor, PIScopedSymbol, PINamespaceSymbol now standalone (no antlr4-c3 imports).
+- PSymbolTableBase pivoted to extend PScopedSymbol with inlined `PSymbolTableOptions`. Antlr4C3 SymbolTable inheritance dropped — codebase managed its own dependencies via `PSymbolTable.dependencyTable`, so the SymbolTable surface (`addDependencies`, `addNewSymbolOfType`, `symbolWithContext`, etc.) was unused. `allowDuplicateSymbols` is preserved as a stored option but is a no-op for the addSymbol path the codebase actually uses.
 
 **Next step**: 2.2 — Verify no direct antlr4-c3 imports remain outside antlr-sym/ and generated grammar; LSP smoke test
 **Error count**: 0 baseline build across all 5 tsc projects
-**Notes**: PModifier and PMemberVisibility files exist as dormant standalone enums (kept for future use; call sites still use antlr4-c3 Modifier/MemberVisibility). The three remaining antlr4-c3 class imports in antlr-sym/ require reimplementing the BaseSymbol/ScopedSymbol/SymbolTable runtime — separate dedicated step.
+**Notes**: Remaining antlr4-c3 imports inside antlr-sym/ are 3 active: PBaseSymbol (class extension), PScopedSymbol (class extension), PUtils (one `Modifier` reference, gated on PModifier activation at call sites). PModifier and PMemberVisibility files exist as dormant standalone enums. PBaseSymbol/PScopedSymbol must be migrated together as a pair — they need the BaseSymbol/ScopedSymbol runtime reimplemented (~650 LOC of antlr4-c3 behavior), separate dedicated step.
 
 ---
 
