@@ -619,8 +619,10 @@ export class PUtils
 		return (method.methodFlags & PMethodFlags.Virtual) != 0;
 	}
 
-	public static extractSignature( symbol : PBaseSymbol ) : string
+	public static extractSignature( symbol : PBaseSymbol | undefined ) : string
 	{
+		if(!symbol)
+			return '';
 		let result : string;
 		if(symbol.parent && !(symbol.parent instanceof PSymbolTable) && !(symbol.parent instanceof PLibraryTable) )
 			result = PUtils.extractSignature(symbol.parent) + '.' + symbol.name;

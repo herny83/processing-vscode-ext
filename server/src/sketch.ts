@@ -403,11 +403,13 @@ export class PdeContentInfo implements IDiagnosticReporter
 	   this.diagnostics.push(diagnostic);
 	}
 
-	public tryFixComponentType( type: psymb.PType, scope : PIScopedSymbol, callerScope ?: PIScopedSymbol | undefined )
+	public tryFixComponentType( type: psymb.PType | undefined, scope : PIScopedSymbol | undefined, callerScope ?: PIScopedSymbol | undefined )
 		{
 			if(type == undefined)
 				return;
 			if(type.name=="?")
+				return;
+			if(!scope)
 				return;
 	
 			let typeSymbol : psymb.PComponentSymbol | undefined;
