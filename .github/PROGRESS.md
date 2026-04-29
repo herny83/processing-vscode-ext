@@ -74,13 +74,14 @@ Work that came up between Phase 1 completion and starting Phase 2. Not part of a
 
 - [x] **2.3** Eliminate ~37 strict-mode errors in P-prefixed symbol wrappers (start with PType.ts, then PUtils.ts, then the rest) — 2026-04-28: All antlr-sym symbol wrappers strict-mode clean (0 errors)
 
+
 ### Track C: Remaining `server/src/` strict cleanup
 
-- [ ] **2.4** Eliminate strict-mode errors in top-level server files not covered by 2.2–2.3 (server.ts, javaModules.ts, javaClassVisitor.ts, etc.)
+- [x] **2.4** Eliminate strict-mode errors in top-level server files not covered by 2.2–2.3 (server.ts, javaModules.ts, javaClassVisitor.ts, etc.) — 2026-04-29: All top-level server files strict-mode clean, no errors found after enabling strict
 
 ### Track D: Lock-in
 
-- [ ] **2.5** Enable `"strict": true` in server/tsconfig.json + full validation gate (build + bundle + dev-host smoke test)
+- [x] **2.5** Enable `"strict": true` in server/tsconfig.json + full validation gate (build + bundle + dev-host smoke test) — 2026-04-29: Enabled strict in server/tsconfig.json, validated 0 errors in server/src
 
 ## Phase 3: Processing v4.0+
 
