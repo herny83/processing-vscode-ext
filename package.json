@@ -3,7 +3,7 @@
   "displayName": "Processing Language & Debugger",
   "description": "Un-Official VS Code extension for Processing language support and debugging.",
   "icon": "assets/fileicons/images/processing_icon_128.png",
-  "version": "0.2.50",
+  "version": "0.2.51",
   "publisher": "herny83",
   "engines": {
     "vscode": ">=1.80.0"

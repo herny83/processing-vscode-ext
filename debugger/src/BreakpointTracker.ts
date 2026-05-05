@@ -23,21 +23,22 @@ export class BreakpointTracker implements vscode.DebugAdapterTracker
             this.breakpointIdsToConvert = [];
             this.seqToConvert = [];
         }
-        if (message.type === 'request' && message.command === 'breakpointLocations' && message.arguments) 
-        { 
+        if (message.type === 'request' && message.command === 'breakpointLocations' && message.arguments)
+        {
             const breakpointInfo = message.arguments;
-            if (breakpointInfo.source && breakpointInfo.source.path && breakpointInfo.source.path.endsWith('.pde')) 
+            if (breakpointInfo.source && breakpointInfo.source.path && breakpointInfo.source.path.endsWith('.pde'))
             {
                 this.seqToConvert.push(message.seq);
                 const location : sketch.Location = sketch.convertPdeLineToJavaLine(breakpointInfo.source.path, breakpointInfo.line);
                 breakpointInfo.line = location.line;
                 breakpointInfo.source.path = location.file;
+                breakpointInfo.source.name = location.name();
             }
         }
-        if (message.type === 'request' && message.command === 'setBreakpoints' && message.arguments) 
+        if (message.type === 'request' && message.command === 'setBreakpoints' && message.arguments)
         {
             const breakpointInfo = message.arguments;
-            if (breakpointInfo.source && breakpointInfo.source.path && breakpointInfo.source.path.endsWith('.pde'))  
+            if (breakpointInfo.source && breakpointInfo.source.path && breakpointInfo.source.path.endsWith('.pde'))
             {
                 this.seqToConvert.push(message.seq);
                 for( let i=0; breakpointInfo.breakpoints && i < breakpointInfo.breakpoints.length; i++ )
@@ -49,6 +50,7 @@ export class BreakpointTracker implements vscode.DebugAdapterTracker
                     breakpointInfo.lines[i] = sketch.convertPdeLineToJavaLine(breakpointInfo.source.path, breakpointInfo.lines[i]).line;
                 }
                 breakpointInfo.source.path = sketch.getMainJavaFile();
+                breakpointInfo.source.name = sketch.getMainJavaName();
              }
         }
     }
@@ -57,18 +59,26 @@ export class BreakpointTracker implements vscode.DebugAdapterTracker
     {
         // if(message.command === 'breakpointLocations' || message.command === 'setBreakpoints')
         //     console.log("onDidSendMessage: "+JSON.stringify(message));   
-        if (message.type === 'response' && message.command === 'setBreakpoints' && message.body) 
+        if (message.type === 'response' && message.command === 'setBreakpoints' && message.body)
         {
             const seqIndex : number = this.seqToConvert.indexOf(message.request_seq);
             if(seqIndex >= 0 )
             {
                 this.seqToConvert.splice(seqIndex, 1);
                 const breakpointInfo = message.body;
+                const mainJavaName = sketch.getMainJavaName();
                 for( let i=0; breakpointInfo.breakpoints && i < breakpointInfo.breakpoints.length; i++ )
                 {
-                    if( !this.breakpointIdsToConvert.includes(breakpointInfo.breakpoints[i].id) )
-                        this.breakpointIdsToConvert.push(breakpointInfo.breakpoints[i].id);
-                    breakpointInfo.breakpoints[i].line = sketch.convertJavaLineToPdeLine(breakpointInfo.breakpoints[i].line).line;
+                    const bp = breakpointInfo.breakpoints[i];
+                    if( !this.breakpointIdsToConvert.includes(bp.id) )
+                        this.breakpointIdsToConvert.push(bp.id);
+                    const pdeLocation : sketch.Location = sketch.convertJavaLineToPdeLine(bp.line);
+                    bp.line = pdeLocation.line;
+                    if (bp.source && bp.source.name === mainJavaName)
+                    {
+                        bp.source.name = pdeLocation.name();
+                        bp.source.path = pdeLocation.file;
+                    }
                 }
             }
         }

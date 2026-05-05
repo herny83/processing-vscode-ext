@@ -200,6 +200,8 @@ export class ProcessingDebugConfigurationProvider implements vscode.DebugConfigu
 				return undefined;
 			}
 
+			await this.registerJdtSourcePath();
+
 			const mainClasses = await lsPlugin.resolveMainClass(javaUri);
 			let pick : lsPlugin.IMainClassOption | undefined;
 			if(mainClasses)
@@ -409,50 +411,87 @@ export class ProcessingDebugConfigurationProvider implements vscode.DebugConfigu
 		}
 	}
 
+	/**
+	 * Register the Processing-generated Java source directory with JDT so its full AST parser
+	 * is used to resolve breakpoints. Without this, JDT's filesystem-fallback parser maps every
+	 * line to the file's outermost class — for sketches with multiple top-level classes or
+	 * nested classes (compiled to <Outer>$<Inner>.class) this means breakpoints get installed
+	 * on the wrong class and never fire even though they show as verified.
+	 *
+	 * jdt.ls treats the sketch directory as an "invisible project", so this registration is
+	 * in-memory only and does not modify .classpath/.project on disk.
+	 */
+	private async registerJdtSourcePath(): Promise<void> {
+		try {
+			const sketchPath = sketch.getSketchPath();
+			if (!sketchPath) {
+				return;
+			}
+			const generatedSrc = path.join(sketchPath, "build", "source");
+			if (!this.isExistingDirectory(generatedSrc)) {
+				return;
+			}
+			const uri = vscode.Uri.file(generatedSrc).toString();
+			await commands.executeJavaLanguageServerCommand(commands.ADD_TO_SOURCEPATH, uri);
+			out.logToOutput("Registered generated source with JDT: " + uri);
+		} catch (e) {
+			out.logToOutput("Failed to register generated source with JDT: " + String((e && (e as any).message) || e));
+		}
+	}
+
 	private injectSourcePaths(config: vscode.DebugConfiguration, folder: vscode.WorkspaceFolder | undefined): void {
 		try {
-			const debugSettings: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
-			const enableLookup = debugSettings.get<boolean>("processing.debug.enableLibrarySourceLookup", true);
-			if (!enableLookup) {
-				return; // feature disabled by user
-			}
-
 			// Start from any existing sourcePaths contributed by user/config
 			let sourcePaths: string[] = Array.isArray(config.sourcePaths) ? _.clone(config.sourcePaths) : [];
 
-			// Common Java source roots to probe in each workspace folder
-			const commonRoots = [
-				"src/main/java",
-				"src/test/java",
-				"src",
-				"test",
-				"source",
-				"sources"
-			];
-
-			const workspaceFolders = vscode.workspace.workspaceFolders || [];
-			for (const wf of workspaceFolders) {
-				for (const rel of commonRoots) {
-					const abs = path.join(wf.uri.fsPath, rel);
-					if (this.isExistingDirectory(abs)) {
-						sourcePaths.push(vscode.Uri.file(abs).fsPath);
-					}
+			// Always include the Processing-generated Java source directory. The BreakpointTracker
+			// rewrites .pde source paths to <sketchPath>/build/source/<Sketch>.java; without this
+			// root JDT cannot resolve the file to a class FQN, and PDE breakpoints never bind.
+			const sketchPath = sketch.getSketchPath();
+			if (sketchPath) {
+				const generatedSrc = path.join(sketchPath, "build", "source");
+				if (this.isExistingDirectory(generatedSrc)) {
+					sourcePaths.push(vscode.Uri.file(generatedSrc).fsPath);
 				}
 			}
 
-			// Include any user-specified additional source paths (absolute or workspace-relative)
-			const additional = debugSettings.get<string[]>("processing.debug.additionalSourcePaths", []) || [];
-			for (const p of additional) {
-				if (!p || typeof p !== "string") { continue; }
-				let abs = p;
-				if (!path.isAbsolute(abs)) {
-					const base = folder?.uri.fsPath || workspaceFolders[0]?.uri.fsPath;
-					if (base) {
-						abs = path.join(base, p);
+			const debugSettings: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
+			const enableLookup = debugSettings.get<boolean>("processing.debug.enableLibrarySourceLookup", true);
+			if (enableLookup) {
+				// Common Java source roots to probe in each workspace folder
+				const commonRoots = [
+					"src/main/java",
+					"src/test/java",
+					"src",
+					"test",
+					"source",
+					"sources"
+				];
+
+				const workspaceFolders = vscode.workspace.workspaceFolders || [];
+				for (const wf of workspaceFolders) {
+					for (const rel of commonRoots) {
+						const abs = path.join(wf.uri.fsPath, rel);
+						if (this.isExistingDirectory(abs)) {
+							sourcePaths.push(vscode.Uri.file(abs).fsPath);
+						}
 					}
 				}
-				if (this.isExistingDirectory(abs)) {
-					sourcePaths.push(vscode.Uri.file(abs).fsPath);
+
+				// Include any user-specified additional source paths (absolute or workspace-relative)
+				const additional = debugSettings.get<string[]>("processing.debug.additionalSourcePaths", []) || [];
+				for (const p of additional) {
+					if (!p || typeof p !== "string") { continue; }
+					let abs = p;
+					if (!path.isAbsolute(abs)) {
+						const base = folder?.uri.fsPath || workspaceFolders[0]?.uri.fsPath;
+						if (base) {
+							abs = path.join(base, p);
+						}
+					}
+					if (this.isExistingDirectory(abs)) {
+						sourcePaths.push(vscode.Uri.file(abs).fsPath);
+					}
 				}
 			}
 
